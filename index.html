@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taariq — Job Application Bot</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root {
+  --bg: #0c0c0f; --surface: #141418; --surface2: #1a1a20;
+  --border: #252530; --border2: #32323f;
+  --accent: #c8f542; --accent2: #5b5bff;
+  --text: #e8e8f0; --muted: #6b6b80;
+  --success: #42f5a8; --warn: #f5a842; --danger: #f55442;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; min-height: 100vh; }
+body::before { content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E"); pointer-events:none; z-index:1000; opacity:0.4; }
+
+header { border-bottom:1px solid var(--border); padding:0 40px; display:flex; align-items:center; position:sticky; top:0; background:rgba(12,12,15,0.92); backdrop-filter:blur(12px); z-index:100; }
+.logo { display:flex; align-items:center; gap:12px; padding:18px 0; margin-right:28px; }
+.logo-mark { width:30px; height:30px; background:var(--accent); border-radius:6px; display:flex; align-items:center; justify-content:center; font-family:'Syne',sans-serif; font-weight:800; font-size:13px; color:#0c0c0f; }
+.logo-text { font-family:'Syne',sans-serif; font-weight:700; font-size:14px; }
+.nav-tabs { display:flex; height:100%; }
+.nav-tab { padding:20px 18px; font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all 0.2s; user-select:none; white-space:nowrap; }
+.nav-tab:hover { color:var(--text); }
+.nav-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+.nav-badge { display:inline-flex; align-items:center; justify-content:center; background:var(--accent2); color:white; border-radius:10px; font-size:9px; padding:1px 6px; margin-left:6px; min-width:18px; }
+
+.page { display:none; padding:48px 40px; max-width:1100px; margin:0 auto; }
+.page.active { display:block; }
+h1 { font-family:'Syne',sans-serif; font-size:38px; font-weight:800; line-height:1.05; margin-bottom:8px; }
+h1 span { color:var(--accent); }
+.subtitle { color:var(--muted); font-size:12px; margin-bottom:36px; letter-spacing:0.02em; }
+
+.card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:24px; position:relative; overflow:hidden; transition:border-color 0.2s; }
+.card:focus-within { border-color:var(--border2); }
+.card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--accent2),var(--accent)); opacity:0; transition:opacity 0.3s; }
+.card:focus-within::before { opacity:1; }
+.card-label { font-size:10px; text-transform:uppercase; letter-spacing:0.15em; color:var(--muted); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.card-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:16px; }
+.full { grid-column:1/-1; }
+.mb16 { margin-bottom:16px; }
+
+textarea, input[type="text"], select { width:100%; background:transparent; border:none; color:var(--text); font-family:'DM Mono',monospace; font-size:12px; line-height:1.7; resize:none; outline:none; }
+select { cursor:pointer; -webkit-appearance:none; }
+select option { background:var(--surface); }
+textarea::placeholder, input::placeholder { color:var(--muted); }
+
+.btn-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:36px; align-items:center; }
+button { font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; border:none; border-radius:8px; padding:12px 22px; transition:all 0.2s; letter-spacing:0.05em; display:inline-flex; align-items:center; gap:7px; }
+.btn-primary { background:var(--accent); color:#0c0c0f; font-weight:500; }
+.btn-primary:hover { background:#d4ff55; transform:translateY(-1px); }
+.btn-primary:disabled { opacity:0.35; cursor:not-allowed; transform:none; }
+.btn-secondary { background:transparent; color:var(--muted); border:1px solid var(--border); }
+.btn-secondary:hover { border-color:var(--muted); color:var(--text); }
+.btn-ghost { background:transparent; color:var(--muted); border:1px solid var(--border); padding:8px 14px; font-size:10px; }
+.btn-ghost:hover { border-color:var(--accent); color:var(--accent); }
+.btn-pdf { background:rgba(91,91,255,0.12); color:#8888ff; border:1px solid rgba(91,91,255,0.25); }
+.btn-pdf:hover { background:rgba(91,91,255,0.22); border-color:rgba(91,91,255,0.5); }
+.btn-danger { background:rgba(245,84,66,0.08); color:var(--danger); border:1px solid rgba(245,84,66,0.2); padding:4px 10px; font-size:9px; }
+.btn-danger:hover { background:rgba(245,84,66,0.18); }
+
+.results-section { display:none; }
+.results-section.visible { display:block; }
+
+.score-bar { display:flex; align-items:center; gap:16px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 20px; margin-bottom:20px; }
+.score-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; }
+.score-value { font-family:'Syne',sans-serif; font-size:26px; font-weight:800; color:var(--accent); margin-left:auto; flex-shrink:0; }
+.score-track { flex:1; height:4px; background:var(--border); border-radius:2px; overflow:hidden; }
+.score-fill { height:100%; background:linear-gradient(90deg,var(--accent2),var(--accent)); border-radius:2px; transition:width 1.2s cubic-bezier(0.4,0,0.2,1); width:0%; }
+.score-reason { font-size:11px; color:var(--muted); margin-top:4px; }
+.progress-bar { height:3px; background:var(--border); border-radius:2px; overflow:hidden; margin-top:10px; }
+.progress-fill { height:100%; background:linear-gradient(90deg,var(--accent2),var(--accent)); border-radius:2px; transition:width 0.5s ease; }
+
+.badge { font-size:10px; padding:3px 10px; border-radius:20px; text-transform:uppercase; letter-spacing:0.08em; white-space:nowrap; }
+.badge-green { background:rgba(66,245,168,0.12); color:var(--success); border:1px solid rgba(66,245,168,0.2); }
+.badge-blue { background:rgba(91,91,255,0.12); color:#8888ff; border:1px solid rgba(91,91,255,0.2); }
+.badge-warn { background:rgba(245,168,66,0.12); color:var(--warn); border:1px solid rgba(245,168,66,0.2); }
+
+.tabs { display:flex; border-bottom:1px solid var(--border); }
+.tab { padding:11px 20px; font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all 0.2s; user-select:none; }
+.tab:hover { color:var(--text); }
+.tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+.tab-content { display:none; background:var(--surface); border:1px solid var(--border); border-top:none; border-radius:0 0 12px 12px; padding:28px; }
+.tab-content.active { display:block; }
+.output-text { font-size:12px; line-height:1.8; white-space:pre-wrap; color:var(--text); }
+.action-bar { display:flex; gap:8px; margin-top:20px; flex-wrap:wrap; }
+.keyword-pill { display:inline-block; margin:3px 5px 3px 0; padding:5px 12px; background:rgba(200,245,66,0.07); border:1px solid rgba(200,245,66,0.18); border-radius:20px; font-size:11px; color:var(--accent); }
+.section-header { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+.section-title { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; }
+
+.job-feed { display:flex; flex-direction:column; gap:12px; margin-bottom:32px; }
+.job-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px 20px; transition:all 0.2s; position:relative; }
+.job-card:hover { border-color:var(--border2); transform:translateX(3px); }
+.job-card.applied { opacity:0.5; }
+.job-title { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; }
+.job-meta { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0; }
+.job-tag { font-size:10px; padding:3px 8px; background:var(--surface2); border:1px solid var(--border); border-radius:4px; color:var(--muted); }
+.job-snippet { font-size:11px; color:var(--muted); line-height:1.6; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.job-actions { display:flex; gap:6px; margin-top:12px; }
+.applied-stamp { display:inline-block; font-size:9px; text-transform:uppercase; letter-spacing:0.1em; color:var(--success); border:1px solid rgba(66,245,168,0.3); padding:2px 8px; border-radius:4px; margin-bottom:8px; }
+.filter-bar { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; align-items:center; }
+.filter-chip { font-size:10px; padding:6px 14px; border:1px solid var(--border); border-radius:20px; color:var(--muted); cursor:pointer; transition:all 0.2s; background:transparent; font-family:'DM Mono',monospace; letter-spacing:0.05em; }
+.filter-chip:hover { border-color:var(--muted); color:var(--text); }
+.filter-chip.active { border-color:var(--accent); color:var(--accent); background:rgba(200,245,66,0.06); }
+
+.tracker-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:28px; }
+.stat-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px 20px; }
+.stat-value { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; color:var(--accent); margin-bottom:4px; }
+.stat-label { font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); }
+.log-table { width:100%; border-collapse:collapse; font-size:11px; }
+.log-table th { text-align:left; padding:10px 14px; font-size:9px; text-transform:uppercase; letter-spacing:0.12em; color:var(--muted); border-bottom:1px solid var(--border); }
+.log-table td { padding:12px 14px; border-bottom:1px solid var(--border); vertical-align:middle; }
+.log-table tr:last-child td { border-bottom:none; }
+.log-table tr:hover td { background:var(--surface2); }
+
+.loading-overlay { display:none; position:fixed; inset:0; background:rgba(12,12,15,0.88); backdrop-filter:blur(6px); z-index:500; align-items:center; justify-content:center; flex-direction:column; gap:16px; }
+.loading-overlay.visible { display:flex; }
+.spinner { width:36px; height:36px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading-step { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; }
+.loading-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.12em; }
+
+.toast { position:fixed; bottom:28px; right:28px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 20px; font-size:12px; z-index:600; transform:translateY(80px); opacity:0; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); max-width:320px; }
+.toast.show { transform:translateY(0); opacity:1; }
+.toast.success { border-left:3px solid var(--success); }
+.toast.error { border-left:3px solid var(--danger); }
+
+.error-msg { background:rgba(245,84,66,0.08); border:1px solid rgba(245,84,66,0.25); color:#ff8080; padding:12px 16px; border-radius:8px; font-size:12px; margin-bottom:16px; display:none; }
+.error-msg.visible { display:block; }
+.scrape-status { font-size:11px; color:var(--muted); display:flex; align-items:center; gap:8px; }
+.pulse { width:6px; height:6px; border-radius:50%; background:var(--accent); animation:pulse 1.4s infinite; flex-shrink:0; }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.2;} }
+input[type="range"] { -webkit-appearance:none; width:100%; height:3px; background:var(--border); border-radius:2px; outline:none; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:var(--accent); cursor:pointer; }
+.notice-card { background:rgba(245,168,66,0.04); border:1px solid rgba(245,168,66,0.3); border-radius:10px; padding:16px 20px; margin-bottom:16px; font-size:11px; line-height:1.7; color:var(--muted); display:none; }
+.notice-card strong { color:var(--text); }
+.notice-card a { color:var(--accent); }
+.notice-title { font-family:'Syne',sans-serif; font-weight:700; color:var(--warn); margin-bottom:6px; font-size:12px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">TF</div>
+    <div class="logo-text">Application Bot</div>
+    <span style="font-size:9px;color:var(--muted);margin-left:6px;padding:2px 8px;border:1px solid var(--border);border-radius:10px;letter-spacing:0.08em;">LOCAL</span>
+  </div>
+  <nav class="nav-tabs">
+    <div class="nav-tab active" onclick="showPage('generate',this)">✏️ Generate</div>
+    <div class="nav-tab" onclick="showPage('scraper',this)">🔍 Job Scraper</div>
+    <div class="nav-tab" onclick="showPage('tracker',this)">📋 Tracker <span class="nav-badge" id="trackerCount">0</span></div>
+  </nav>
+  <!-- Ollama status pill -->
+  <div style="margin-left:auto;display:flex;align-items:center;gap:10px;">
+    <div style="display:flex;align-items:center;gap:7px;padding:6px 12px;background:var(--surface);border:1px solid var(--border);border-radius:20px;">
+      <div id="ollamaIndicator" style="width:7px;height:7px;border-radius:50%;background:var(--muted);transition:background 0.3s;"></div>
+      <span id="ollamaLabel" style="font-size:10px;color:var(--muted);letter-spacing:0.05em;">Checking Ollama...</span>
+    </div>
+    <select id="modelSelect" onchange="onModelChange(this.value)" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Mono',monospace;font-size:10px;padding:6px 10px;cursor:pointer;outline:none;">
+      <option value="llama3">llama3</option>
+    </select>
+    <button onclick="checkOllama()" style="background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;padding:6px 10px;cursor:pointer;">↺ Retry</button>
+  </div>
+</header>
+
+<!-- ═══ PAGE: GENERATE ═══ -->
+<div class="page active" id="page-generate">
+  <h1>Tailor your<br><span>application.</span></h1>
+  <p class="subtitle">// runs 100% locally via Ollama — no API key, no internet required</p>
+
+  <!-- Ollama setup guide (shown only when Ollama not detected) -->
+  <div id="ollamaSetup" style="display:none;background:rgba(200,245,66,0.04);border:1px solid rgba(200,245,66,0.2);border-radius:12px;padding:24px;margin-bottom:24px;">
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:var(--accent);margin-bottom:4px;">⚡ Quick Setup — 3 commands</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:20px;">Ollama wasn't detected on <code style="color:var(--text);">localhost:11434</code>. Get it running in under a minute:</div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 18px;">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:8px;">1 · Install Ollama</div>
+        <code style="font-size:12px;color:var(--accent);">curl -fsSL https://ollama.com/install.sh | sh</code>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px;">Or download from <a href="https://ollama.com" target="_blank" style="color:var(--accent);">ollama.com</a> (Mac/Windows/Linux)</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 18px;">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:8px;">2 · Pull a model (pick one)</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;align-items:center;gap:12px;"><code style="font-size:12px;color:var(--accent);flex:1;">ollama pull llama3</code><span style="font-size:10px;color:var(--muted);">4.7GB · Best quality ⭐</span></div>
+          <div style="display:flex;align-items:center;gap:12px;"><code style="font-size:12px;color:var(--text);flex:1;">ollama pull mistral</code><span style="font-size:10px;color:var(--muted);">4.1GB · Fast &amp; reliable</span></div>
+          <div style="display:flex;align-items:center;gap:12px;"><code style="font-size:12px;color:var(--text);flex:1;">ollama pull phi3</code><span style="font-size:10px;color:var(--muted);">2.3GB · Lightweight</span></div>
+        </div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 18px;">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:8px;">3 · Enable browser access (CORS)</div>
+        <code style="font-size:12px;color:var(--accent);">OLLAMA_ORIGINS="*" ollama serve</code>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px;">This allows the local HTML file to talk to Ollama. Run this instead of the default <code>ollama serve</code>.</div>
+      </div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:10px;align-items:center;">
+      <button onclick="checkOllama()" style="background:var(--accent);color:#0c0c0f;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;border:none;border-radius:8px;padding:10px 20px;cursor:pointer;letter-spacing:0.05em;">↺ Check Again</button>
+      <span style="font-size:10px;color:var(--muted);">Once Ollama is running, click above to detect it automatically.</span>
+    </div>
+  </div>
+
+  <div class="grid-2 mb16">
+    <div class="card full">
+      <div class="card-label">Job Description</div>
+      <textarea id="jobInput" rows="8" placeholder="Paste the full job description here...&#10;&#10;Role title, responsibilities, required skills, company info — the more detail, the better the tailoring."></textarea>
+    </div>
+    <div class="card">
+      <div class="card-label">Company Name</div>
+      <input type="text" id="companyInput" placeholder="e.g. Monzo, DeepMind, HSBC...">
+    </div>
+    <div class="card">
+      <div class="card-label">Role Title</div>
+      <input type="text" id="roleInput" placeholder="e.g. Junior Backend Developer...">
+    </div>
+  </div>
+
+  <div class="error-msg" id="genError"></div>
+  <div class="btn-row">
+    <button class="btn-primary" id="generateBtn" onclick="generate()">⚡ Generate Application</button>
+    <button class="btn-secondary" onclick="clearGen()">Clear</button>
+  </div>
+
+  <div class="results-section" id="resultsSection">
+    <div class="section-header">
+      <div class="section-title">Application Ready</div>
+      <span class="badge badge-green" id="matchBadge">Strong Match</span>
+    </div>
+
+    <div class="score-bar">
+      <div style="flex:1;min-width:0;">
+        <div class="score-label">Job Fit Score</div>
+        <div class="score-reason" id="scoreReason"></div>
+        <div class="progress-bar"><div class="progress-fill" id="scoreFill"></div></div>
+      </div>
+      <div class="score-value" id="scoreValue">—</div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('cv',this)">Tailored CV</div>
+      <div class="tab" onclick="switchTab('cover',this)">Cover Letter</div>
+      <div class="tab" onclick="switchTab('keywords',this)">Keywords</div>
+    </div>
+
+    <div class="tab-content active" id="tab-cv">
+      <div class="output-text" id="cvOutput"></div>
+      <div class="action-bar">
+        <button class="btn-ghost" onclick="copyText('cvOutput',this)">📋 Copy CV</button>
+        <button class="btn-pdf" onclick="exportPDF('cv')">⬇ Export CV as PDF</button>
+        <button class="btn-ghost" onclick="logApplication()">✓ Log as Applied</button>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-cover">
+      <div class="output-text" id="coverOutput"></div>
+      <div class="action-bar">
+        <button class="btn-ghost" onclick="copyText('coverOutput',this)">📋 Copy Letter</button>
+        <button class="btn-pdf" onclick="exportPDF('cover')">⬇ Export Cover Letter as PDF</button>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-keywords">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:14px;">Keywords mirrored from job description</div>
+      <div id="keywordsOutput"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: SCRAPER ═══ -->
+<div class="page" id="page-scraper">
+  <h1>Find<br><span>your roles.</span></h1>
+  <p class="subtitle">// search live jobs scored against your profile · click any result to generate an application</p>
+
+  <div class="card mb16">
+    <div class="card-label">Search Parameters</div>
+    <div class="grid-3" style="margin-bottom:0;">
+      <div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em;">Keywords</div>
+        <input type="text" id="searchKeywords" value="junior developer python" placeholder="e.g. backend developer python">
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em;">Location</div>
+        <input type="text" id="searchLocation" value="London" placeholder="e.g. London, Remote">
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em;">Source</div>
+        <select id="searchSource">
+          <option value="adzuna">Adzuna API</option>
+          <option value="remotive">Remotive (Remote, free)</option>
+          <option value="reed">Reed API</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb16" style="padding:18px 24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);">Minimum Fit Score to Show</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent);" id="scoreThresholdLabel">6 / 10</div>
+    </div>
+    <input type="range" min="1" max="10" value="6" id="scoreThreshold" oninput="document.getElementById('scoreThresholdLabel').textContent=this.value+' / 10'">
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-primary" id="scrapeBtn" onclick="scrapeJobs()">🔍 Search Jobs</button>
+    <div class="scrape-status" id="scrapeStatus" style="display:none;">
+      <div class="pulse"></div>
+      <span id="scrapeStatusText">Fetching listings...</span>
+    </div>
+  </div>
+
+  <div class="error-msg" id="scrapeError"></div>
+
+  <div class="notice-card" id="apiNotice">
+    <div class="notice-title">⚠ Live API Keys for Production Use</div>
+    To pull real listings you'll need free keys:<br>
+    • <strong>Adzuna</strong>: <a href="https://developer.adzuna.com" target="_blank">developer.adzuna.com</a> — 250 req/day free<br>
+    • <strong>Reed</strong>: <a href="https://www.reed.co.uk/developers/jobseeker" target="_blank">reed.co.uk/developers</a> — free<br>
+    • <strong>Remotive</strong>: No key needed — public API for remote jobs<br><br>
+    Showing <strong>demo results</strong> for now — scored in real-time by Claude against your profile.
+  </div>
+
+  <div class="filter-bar" id="filterBar" style="display:none;">
+    <span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;">Filter:</span>
+    <button class="filter-chip active" onclick="filterJobs('all',this)">All</button>
+    <button class="filter-chip" onclick="filterJobs('Developer',this)">Developer</button>
+    <button class="filter-chip" onclick="filterJobs('Data',this)">Data</button>
+    <button class="filter-chip" onclick="filterJobs('Backend',this)">Backend</button>
+    <button class="filter-chip" onclick="filterJobs('Graduate',this)">Graduate</button>
+    <button class="filter-chip" onclick="filterJobs('Remote',this)">Remote</button>
+  </div>
+
+  <div id="jobFeed" class="job-feed"></div>
+</div>
+
+<!-- ═══ PAGE: TRACKER ═══ -->
+<div class="page" id="page-tracker">
+  <h1>Your<br><span>pipeline.</span></h1>
+  <p class="subtitle">// every application you've logged, all in one place</p>
+
+  <div class="tracker-grid">
+    <div class="stat-card"><div class="stat-value" id="stat-total">0</div><div class="stat-label">Applied</div></div>
+    <div class="stat-card"><div class="stat-value" id="stat-avgScore">—</div><div class="stat-label">Avg Fit Score</div></div>
+    <div class="stat-card"><div class="stat-value" id="stat-thisWeek">0</div><div class="stat-label">This Week</div></div>
+    <div class="stat-card"><div class="stat-value" id="stat-topRole">—</div><div class="stat-label">Top Role Type</div></div>
+  </div>
+
+  <div class="card">
+    <table class="log-table">
+      <thead>
+        <tr><th>Role</th><th>Company</th><th>Fit Score</th><th>Date</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody id="logTableBody">
+        <tr><td colspan="6" style="text-align:center;padding:48px;color:var(--muted);">No applications logged yet — generate one and hit "Log as Applied"</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-step" id="loadingStep">Analysing...</div>
+  <div class="loading-label" id="loadingLabel">please wait</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────
+// ── MODULAR SUMMARY BULLETS ───────────────────────────
+// Structure:
+//   FIXED bullets   — always included (tagged 'always'), no variants
+//   VARIANT bullets — a pool of options; buildSummary picks the best-matching
+//                     one based on JD keywords, falling back to a default
+//   CONDITIONAL     — only included when JD matches their tags
+
+// ── VARIANT POOL: stack / hands-on experience bullet ──
+// Each variant has specificity tags. The first match wins; 'default' is the fallback.
+const STACK_VARIANTS = [
+  {
+    tags: ['typescript', 'sanity', 'cms', 'headless', 'content'],
+    text: "Production TypeScript experience building and maintaining a live healthcare content platform, including a headless CMS architecture, GROQ queries and HTTP backend services."
+  },
+  {
+    tags: ['python', 'django', 'flask', 'fastapi', 'script', 'automation'],
+    text: "Hands-on Python development experience including Django, data scripting and automation, alongside TypeScript production work building backend HTTP services and CMS integrations."
+  },
+  {
+    tags: ['machine learning', 'ml', 'data science', 'sklearn', 'scikit', 'numpy', 'pandas', 'regression', 'modelling'],
+    text: "Python development experience applied to both data science (regression models, Pandas, Matplotlib, scikit-learn) and production backend services (TypeScript, Node.js, REST APIs)."
+  },
+  {
+    tags: ['backend', 'node', 'node.js', 'express', 'http', 'server', 'rest', 'api', 'microservice'],
+    text: "Hands-on backend development experience using TypeScript and Node.js — building HTTP request-handling services, REST APIs and backend data pipelines in a production environment."
+  },
+  {
+    tags: ['full stack', 'fullstack', 'full-stack', 'frontend', 'react', 'vue', 'html', 'css'],
+    text: "Full-stack development experience spanning TypeScript backend services, HTML/CSS frontend interfaces and CMS-driven content delivery, built and maintained in a live production environment."
+  },
+  {
+    tags: ['javascript', 'js', 'web', 'browser'],
+    text: "Web development experience across TypeScript, JavaScript and Python — including a live production healthcare platform, browser-based applications and backend service development."
+  },
+  {
+    tags: ['default'],
+    text: "Hands-on backend and frontend development experience using TypeScript, Python and JavaScript, with production deployments in a regulated healthcare environment."
+  }
+];
+
+// ── VARIANT POOL: GCP / cloud bullet ──────────────────
+const GCP_VARIANTS = [
+  {
+    tags: ['bigquery', 'data pipeline', 'data engineering', 'warehouse'],
+    text: "Familiar with GCP including BigQuery for data querying and pipeline work, and Compute Engine from university AI/ML projects."
+  },
+  {
+    tags: ['machine learning', 'ml', 'ai', 'model', 'training', 'inference', 'vertex'],
+    text: "Hands-on GCP experience with AI/ML operations and Compute Engine through university projects, including training and evaluating regression models on structured datasets."
+  },
+  {
+    tags: ['cloud', 'gcp', 'google cloud', 'compute engine', 'infrastructure', 'devops', 'deploy'],
+    text: "Familiar with GCP (Compute Engine, AI/ML operations) from university coursework and personal projects; comfortable working in cloud-based development environments."
+  },
+  {
+    tags: ['default'],
+    text: "Familiar with GCP (Compute Engine, AI/ML operations) from university and personal projects."
+  }
+];
+
+// ── CONDITIONAL bullets — shown only when JD matches ──
+const CONDITIONAL_BULLETS = [
+  {
+    text: "Passion for data analytics and management; experience building and querying database systems using SQL, MySQL and BigQuery.",
+    tags: ['data', 'analytics', 'sql', 'database', 'bigquery', 'analyst', 'bi', 'intelligence', 'reporting']
+  },
+  {
+    text: "Understanding of the BFSI sector and financial services technology landscape.",
+    tags: ['bfsi', 'finance', 'financial', 'banking', 'fintech', 'investment', 'payments', 'insurance']
+  },
+  {
+    text: "Experience with object-oriented programming in Java through university pair-programming projects.",
+    tags: ['java', 'oop', 'object-oriented', 'object oriented']
+  },
+  {
+    text: "Experienced building and consuming REST APIs and backend HTTP services in TypeScript and Python.",
+    tags: ['api', 'rest', 'endpoint', 'microservice', 'integration', 'webhook']
+  },
+  {
+    text: "Practical experience with machine learning fundamentals — regression models, feature selection, preprocessing and data visualisation — applied to a real-world student wellbeing dataset.",
+    tags: ['machine learning', 'ml', 'data science', 'regression', 'prediction', 'sklearn', 'scikit', 'numpy', 'pandas', 'modelling']
+  },
+  {
+    text: "Proven ability to deliver measurable results under pressure; contributed to a record-breaking production shift (266,000 units, +15% on previous record).",
+    tags: ['pressure', 'operational', 'operations', 'kpi', 'targets', 'performance', 'lean', 'process improvement']
+  },
+  {
+    text: "Experience working in regulated, compliance-driven environments and collaborating with cross-functional stakeholders.",
+    tags: ['regulated', 'compliance', 'regulated environment', 'gdpr', 'iso', 'cross-functional', 'stakeholder']
+  },
+];
+
+// Pick the best-matching variant from a pool
+function pickVariant(pool, jd) {
+  for (const v of pool) {
+    if (v.tags.includes('default')) continue; // skip fallback in first pass
+    if (v.tags.some(tag => jd.includes(tag))) return v.text;
+  }
+  // Fall back to default
+  return pool.find(v => v.tags.includes('default'))?.text || '';
+}
+
+// Build a tailored summary — always 3 fixed lines + up to 2 conditional
+function buildSummary(jobText) {
+  const jd = jobText.toLowerCase();
+
+  const bullets = [];
+
+  // 1. Always: degree
+  bullets.push("BSc Computer Science graduate from the University of Exeter (2021–2024), with emphasis on software engineering, algorithm design and data analysis.");
+
+  // 2. Variant: stack bullet — most specific match to JD
+  bullets.push(pickVariant(STACK_VARIANTS, jd));
+
+  // 3. Always: soft skills
+  bullets.push("Strong attention to detail, cooperative, proactive and energetic — comfortable working in both team and independent environments.");
+
+  // 4 & 5. Conditional bullets — pick the two most relevant
+  const matched = CONDITIONAL_BULLETS.filter(b =>
+    b.tags.some(tag => jd.includes(tag))
+  );
+
+  // GCP variant — only add if JD mentions cloud/ML/GCP
+  const gcpTriggers = ['gcp','cloud','google cloud','compute engine','ml','machine learning','ai','bigquery','vertex'];
+  if (gcpTriggers.some(t => jd.includes(t))) {
+    matched.unshift({ text: pickVariant(GCP_VARIANTS, jd), _isGcp: true });
+  }
+
+  // Deduplicate and cap: add up to 2 conditional bullets
+  const added = new Set();
+  for (const b of matched) {
+    if (bullets.length >= 5) break;
+    if (!added.has(b.text)) { bullets.push(b.text); added.add(b.text); }
+  }
+
+  return bullets.map(b => `- ${b}`).join('\n');
+}
+
+// CV template — summary is injected dynamically via buildSummary()
+function buildCVData(jobText) {
+  return `TAARIQ FADHIL
+07771548194 | fadhill.taariq@gmail.com | github.com/fadhill-taariq | linkedin.com/in/taariq-fadhil
+
+SUMMARY
+${buildSummary(jobText)}
+
+EDUCATION
+Bachelor of Computer Science — University of Exeter (2021–2024)
+Coursework: Data Structures, Machine Learning Fundamentals, Computer Graphics
+Emphasis: software engineering, algorithm design, unit/integration testing, data analysis
+GCP experience via university: Compute Engine and AI/ML operations
+
+WORK EXPERIENCE
+Freelance Web Developer — Mediq (Healthcare) | Current
+- Expanded and maintained a production healthcare website using TypeScript and Sanity.io
+- Implemented GROQ queries to optimise dynamic content delivery
+- Built backend HTTP request handling services in TypeScript
+- Collaborated with copywriters to ensure compliant content formatting
+
+Production Operator — Ethypharm UK, Romford | Current
+- Operated pharmaceutical detection and QA systems in a regulated environment
+- Contributed to a record-breaking shift (266,000 ampoules packed — 15% above previous record)
+- Trained 4 operators on quality detection systems
+- Implemented Lean and 5S methodologies to streamline operations
+
+PROJECTS
+Tetris Website — Python, HTML, CSS, PHP, JavaScript
+Browser-playable Tetris with score tracking, leaderboard and MySQL-backed authentication
+
+Dissertation: Predictive Modelling — Python, Data Analysis & Visualisation
+Linear and logistic regression models; feature selection, preprocessing, model visualisation
+
+COVID-19 Real-Time News Dashboard
+Live data news feed displaying real-time pandemic statistics
+
+TECHNICAL SKILLS
+Languages: Python (Intermediate), TypeScript (Beginner), JavaScript (Beginner), HTML/CSS (Intermediate), C++ (Beginner)
+Frameworks: Django, Node.js (HTTP services), CMS architectures, MySQL, Pandas, MatPlotLib
+Tools: Git, Linux, Command Line, Sanity.io, GROQ, GCP (Compute Engine, BigQuery)
+Concepts: REST APIs, Backend Dev, Frontend Dev, Machine Learning Fundamentals, Data Visualisation, OOP (Java)`;
+}
+
+// Keep CV_DATA as a static fallback (no job context)
+const CV_DATA = buildCVData('');
+
+const DEMO_JOBS = [
+  { id:1, title:"Junior Backend Developer", company:"Monzo", location:"London (Hybrid)", salary:"£35,000–£45,000", type:"Full-time", source:"Adzuna", url:"https://monzo.com/careers", description:"Join Monzo's engineering team building reliable, scalable backend services. You'll work with Python, REST APIs and SQL databases. We need someone with strong Python fundamentals, Git fluency, Linux comfort and experience with unit and integration testing. Cloud experience (GCP a plus). Small autonomous teams. We value collaboration, attention to detail, a growth mindset and proactive ownership." },
+  { id:2, title:"Graduate Data Analyst", company:"HSBC", location:"London (Office)", salary:"£28,000–£32,000", type:"Graduate Scheme", source:"Reed", url:"https://hsbc.com/careers", description:"HSBC Graduate Technology Programme — data analytics track. Build dashboards, run SQL queries, analyse structured datasets and support BI teams. Strong Python (Pandas, Matplotlib), SQL and experience with data pipelines required. Exposure to financial services or BFSI sector is highly desirable. Structured graduate programme with mentoring and rotation." },
+  { id:3, title:"Junior Full Stack Developer", company:"Deliveroo", location:"London (Hybrid)", salary:"£38,000–£48,000", type:"Full-time", source:"Adzuna", url:"https://deliveroo.co.uk/careers", description:"Build and scale consumer-facing products using TypeScript and Node.js. Work across the stack — REST APIs, backend services, frontend interfaces. CMS architecture experience and Git workflows a plus. Fast-moving team that values ownership and collaboration." },
+  { id:4, title:"Data Engineering Graduate", company:"Barclays", location:"London / Manchester", salary:"£30,000–£38,000", type:"Graduate Scheme", source:"Reed", url:"https://barclays.com/careers", description:"CS graduates with strong programming skills and passion for data. Work with BigQuery, SQL and Python pipelines. Data visualisation (Matplotlib or similar), ML fundamentals and GCP experience advantageous. 24-month rotation across data engineering, analytics and infrastructure." },
+  { id:5, title:"Backend Engineer (Entry Level)", company:"Wise", location:"London (Hybrid)", salary:"£40,000–£50,000", type:"Full-time", source:"Remotive", url:"https://wise.com/careers", description:"Build financial infrastructure in Python or TypeScript. HTTP services, REST APIs, PostgreSQL. Strong software engineering principles — algorithm design, testing (unit/integration). Git, Linux, command line required. Fintech or BFSI exposure a bonus." },
+  { id:6, title:"Junior Python Developer", company:"Faculty AI", location:"London / Remote", salary:"£32,000–£42,000", type:"Full-time", source:"Remotive", url:"https://faculty.ai/careers", description:"Applied AI company hiring junior Python developer interested in data science and ML. Data pipelines, Pandas, NumPy, ML model implementation, output visualisation. Django/Flask, SQL and version control required. ML fundamentals, regression, preprocessing a strong plus. GCP beneficial." },
+  { id:7, title:"TypeScript Developer (Junior)", company:"Typeform", location:"Remote (UK)", salary:"£35,000–£45,000", type:"Full-time", source:"Remotive", url:"https://typeform.com/careers", description:"Junior TypeScript developer for our product team. TypeScript, Node.js web apps, CMS architectures, backend HTTP services. REST APIs, frontend dev and Git required. Sanity.io / headless CMS a bonus. Remote-first, async culture." },
+  { id:8, title:"Software Engineer Graduate", company:"Amazon", location:"London", salary:"£45,000–£55,000", type:"Graduate Scheme", source:"Adzuna", url:"https://amazon.com/careers", description:"Amazon Software Engineer Graduate Programme. CS degree required. Java, Python or TypeScript. Strong OOP, data structures, algorithms, software engineering. REST APIs, SQL, GCP/AWS. Tested, production-ready code from day one with senior mentorship." }
+];
+
+const state = {
+  applications: JSON.parse(localStorage.getItem('tf_apps') || '[]'),
+  currentResult: null,
+  allJobs: [],
+  activeFilter: 'all'
+};
+
+// ── NAV ───────────────────────────────────────────────
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  (el || event.currentTarget).classList.add('active');
+  if (name === 'tracker') renderTracker();
+}
+
+// ── GENERATE ──────────────────────────────────────────
+async function generate() {
+  const jobInput = document.getElementById('jobInput').value.trim();
+  const company = document.getElementById('companyInput').value.trim();
+  const role = document.getElementById('roleInput').value.trim();
+  const err = document.getElementById('genError');
+  err.classList.remove('visible');
+  if (!jobInput) { err.textContent = 'Please paste a job description first.'; err.classList.add('visible'); return; }
+
+  if (ollamaStatus === 'error') {
+    err.textContent = 'Ollama is not running. Follow the setup guide above, then click "Check Again".';
+    err.classList.add('visible');
+    document.getElementById('ollamaSetup').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('generateBtn').disabled = true;
+  document.getElementById('resultsSection').classList.remove('visible');
+  setLoading(true, `Running ${ollamaModel} locally...`, 'step 1 of 3');
+
+  // ── 3 SEPARATE FOCUSED CALLS (local models handle these much better than one giant JSON prompt) ──
+
+  try {
+    // ── CALL 1: Score + keywords ─────────────────────
+    setLoading(true, `Scoring job fit...`, 'step 1 of 3');
+    const scorePrompt = `You are evaluating a job application fit. Score 1-10 how well this candidate matches this job.
+
+CANDIDATE SKILLS: Python, TypeScript, JavaScript, Django, Node.js, REST APIs, SQL, MySQL, BigQuery, GCP, Git, Linux, Machine Learning basics, Data Visualisation, HTML/CSS. BSc Computer Science (Exeter). Freelance web dev (TypeScript, Sanity.io). Production operator (QA, Lean/5S).
+
+JOB: ${jobInput.substring(0, 600)}
+
+Reply with ONLY this JSON and nothing else:
+{"score":7,"scoreReason":"brief reason under 15 words","keywordsUsed":["keyword1","keyword2","keyword3","keyword4","keyword5"]}`;
+
+    const scoreData = await callClaude(scorePrompt, 200);
+    const scoreText = extractText(scoreData);
+    const scoreResult = safeParseJSON(scoreText, { score: 6, scoreReason: 'Good candidate match', keywordsUsed: [] });
+
+    // ── CALL 2: Tailored CV ──────────────────────────
+    setLoadingText(`Tailoring CV with ${ollamaModel}...`, 'step 2 of 3');
+    const cvForJob = buildCVData(jobInput); // summary already pre-filtered for this job
+    const cvPrompt = `Rewrite this CV to better match the job description below. Only reorder and reframe existing content — do NOT invent new skills or experience. Use keywords from the job description where they match real experience. Keep the SUMMARY section exactly as given — do not change it.
+
+CV:
+${cvForJob}
+
+JOB: ${jobInput.substring(0, 800)}
+${company ? 'Company: ' + company : ''}
+${role ? 'Role: ' + role : ''}
+
+Output the full rewritten CV as plain text only. No JSON, no markdown, no commentary. Start directly with the name.`;
+
+    const cvData = await callClaude(cvPrompt, 1500);
+    const tailoredCV = extractText(cvData).trim() || cvForJob;
+
+    // ── CALL 3: Cover letter ─────────────────────────
+    setLoadingText(`Writing cover letter...`, 'step 3 of 3');
+
+    // Taariq's standard cover letter template — fill the blanks and tailor body paragraphs to the job
+    const coverPrompt = `You are helping Taariq Fadhil tailor his cover letter for a specific job application.
+
+Here is his STANDARD cover letter template. Your job is to:
+1. Fill in the blanks (marked ____) with the role and company
+2. Rewrite the body paragraphs to highlight experience most relevant to this specific job — but preserve his writing voice, sentence structure and level of detail
+3. Keep the opening paragraph structure: "I am applying for the [role] position at [company]. I am a Computer Science graduate with..."
+4. Keep the closing paragraph about being drawn to the company — tailor the blank about WHY he is drawn to this specific company/role based on the job description
+5. Keep "I am fully willing to relocate to Finland" ONLY if the job is based in Finland — otherwise remove that sentence
+6. Keep "Sincerely, Taariq Fadhil" at the end
+7. Output plain text only — no JSON, no markdown, no commentary
+
+ROLE: ${role || 'Software Developer'}
+COMPANY: ${company || 'the company'}
+JOB DESCRIPTION: ${jobInput.substring(0, 700)}
+
+STANDARD TEMPLATE TO TAILOR:
+---
+Dear Hiring Manager,
+
+I am applying for the ____ position at ____. I am a Computer Science graduate with hands-on experience building full-stack and backend-driven applications, with a particular focus on API development, database systems and scalable content platforms.
+
+In my recent freelance work within the healthcare sector, I expanded and maintained a production website using TypeScript and a headless CMS architecture powered by Sanity.io. I implemented GROQ queries for dynamic delivery, and built HTTP services to support frontend data consumption. This work built upon my understanding of API design and collaboration with copywriters in a regulated environment.
+
+Furthermore, I have developed several backend-focused academic and personal projects. I built a browser-playable game of Tetris featuring a MySQL leaderboard system with authentication through a login system and score ranking logic, combining database design with interactive frontend gameplay. For my dissertation, I created predictive models using Python and scikit-learn, implementing linear regression and random forest models to predict how students perceive their stress levels during university. This included featured preprocessing, and evaluating model performance across structured datasets that I curated myself.
+
+My broader experience includes object-oriented programming in Java through pair-programming software projects, as well as real-time dashboard developments utilising API integration. These experiences have strengthened my foundations in algorithm design, data handling, and system architecture. I am particularly interested in continuing to grow in backend and cloud-based environments.
+
+Beyond technical experience, I bring strong collaboration and communication skills due to my freelance work and prior tutoring experience. I am confident in understanding the goals of stakeholders and clients and translating these into technical implementations within team environments to ensure reliable software solutions are made.
+
+I am especially drawn to ____ due to ____, and I am excited by the opportunity to contribute to ___ and to continue to develop as an engineer. I am fully willing to relocate to Finland and can do so on short notice.
+
+Thank you for your time and consideration, I look forward to the opportunity to discuss how my experience aligns with the goals of your team.
+
+Sincerely,
+Taariq Fadhil
+---
+
+Output the tailored cover letter only. Start with "Dear Hiring Manager,".`;
+
+    const coverData = await callClaude(coverPrompt, 800);
+    const coverLetter = extractText(coverData).trim();
+
+    setLoading(false);
+    document.getElementById('generateBtn').disabled = false;
+
+    const score = Math.min(10, Math.max(1, scoreResult.score || 6));
+    state.currentResult = {
+      score, scoreReason: scoreResult.scoreReason,
+      tailoredCV, coverLetter,
+      keywordsUsed: scoreResult.keywordsUsed || [],
+      company: company || 'Unknown', role: role || 'Unknown Role',
+      date: new Date().toISOString()
+    };
+
+    document.getElementById('scoreValue').textContent = score + '/10';
+    document.getElementById('scoreFill').style.width = (score * 10) + '%';
+    document.getElementById('scoreReason').textContent = scoreResult.scoreReason || '';
+    const badge = document.getElementById('matchBadge');
+    badge.textContent = score >= 8 ? 'Strong Match' : score >= 6 ? 'Good Match' : 'Partial Match';
+    badge.className = 'badge ' + (score >= 8 ? 'badge-green' : score >= 6 ? 'badge-blue' : 'badge-warn');
+
+    document.getElementById('cvOutput').textContent = tailoredCV;
+    document.getElementById('coverOutput').textContent = coverLetter;
+    document.getElementById('keywordsOutput').innerHTML = (scoreResult.keywordsUsed || []).map(k => `<span class="keyword-pill">${k}</span>`).join('');
+
+    document.getElementById('resultsSection').classList.add('visible');
+    document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  } catch(e) {
+    setLoading(false);
+    document.getElementById('generateBtn').disabled = false;
+    // Show the actual error so it's debuggable
+    err.textContent = `Error: ${e.message || e}. Check that Ollama is running and the model "${ollamaModel}" is installed (run: ollama pull ${ollamaModel}).`;
+    err.classList.add('visible');
+    console.error('Generation error:', e);
+  }
+}
+
+// ── PDF EXPORT ────────────────────────────────────────
+function exportPDF(type) {
+  const { jsPDF } = window.jspdf;
+  const company = document.getElementById('companyInput').value.trim() || 'Application';
+  const role    = document.getElementById('roleInput').value.trim();
+  const filename = `Taariq_Fadhil_${type==='cv'?'CV':'CoverLetter'}_${company.replace(/\s+/g,'_')}.pdf`;
+
+  if (type === 'cover') { exportCoverLetterPDF(company, role, filename); return; }
+
+  // ── CANVA TWO-COLUMN CV LAYOUT ──────────────────────
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  const PW = 210, PH = 297;
+
+  // Parse the tailored CV text back into structured sections
+  const cvText = document.getElementById('cvOutput').textContent;
+  const parsed = parseCVText(cvText);
+
+  // ── LAYOUT CONSTANTS (matching Canva template) ──────
+  const HEADER_H  = 25;       // name banner height
+  const LEFT_W    = PW * 0.37; // left col width
+  const DIV_X     = LEFT_W;
+  const LX        = 8;         // left col x margin
+  const RX        = LEFT_W + 7; // right col x start
+  const RW        = PW - RX - 8; // right col usable width
+  const BODY_TOP  = PH - HEADER_H - 3; // y from top where body starts (jsPDF: y=0 is top)
+  const BOT_LIMIT = 12;        // bottom margin stop
+
+  // Helpers: jsPDF y=0 is top-left
+  let ly = HEADER_H + 8; // left col cursor (mm from top)
+  let ry = HEADER_H + 8; // right col cursor
+
+  // ── HEADER: light grey name banner ──────────────────
+  doc.setFillColor(245, 245, 245);
+  doc.rect(0, 0, PW, HEADER_H, 'F');
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.3);
+  doc.line(0, HEADER_H, PW, HEADER_H);
+
+  // Name — large, letter-spaced, centered
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(22);
+  doc.setTextColor(25,25,25);
+  const nameStr = 'TAARIQ FADHIL';
+  doc.text(nameStr, PW/2, HEADER_H - 7, { align:'center', charSpace: 2.5 });
+
+  // ── VERTICAL DIVIDER ────────────────────────────────
+  doc.setDrawColor(200,200,200);
+  doc.setLineWidth(0.3);
+  doc.line(DIV_X, HEADER_H, DIV_X, PH - BOT_LIMIT);
+
+  // ── SECTION HEADER HELPERS ───────────────────────────
+  function sectionLeft(title, y) {
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(25,25,25);
+    doc.text(title.toUpperCase(), LX, y);
+    y += 1.2;
+    doc.setDrawColor(180,180,180);
+    doc.setLineWidth(0.35);
+    doc.line(LX, y, LEFT_W - 5, y);
+    return y + 5;
+  }
+
+  function sectionRight(title, y) {
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(25,25,25);
+    doc.text(title.toUpperCase(), RX, y);
+    y += 1.2;
+    doc.setDrawColor(180,180,180);
+    doc.setLineWidth(0.35);
+    doc.line(RX, y, PW - 8, y);
+    return y + 5.5;
+  }
+
+  function wrapText(text, font, size, maxW) {
+    doc.setFont('helvetica', font); doc.setFontSize(size);
+    return doc.splitTextToSize(text, maxW);
+  }
+
+  function leftText(text, y, { bold=false, size=7, color=[60,60,60], indent=0 }={}) {
+    doc.setFont('helvetica', bold?'bold':'normal');
+    doc.setFontSize(size); doc.setTextColor(...color);
+    const lines = doc.splitTextToSize(text, LEFT_W - LX - 5 - indent);
+    lines.forEach(l => { if (y < PH - BOT_LIMIT) { doc.text(l, LX+indent, y); y += size*0.42; } });
+    return y;
+  }
+
+  function rightText(text, y, { bold=false, size=7.8, color=[40,40,40], indent=0 }={}) {
+    doc.setFont('helvetica', bold?'bold':'normal');
+    doc.setFontSize(size); doc.setTextColor(...color);
+    const lines = doc.splitTextToSize(text, RW - indent);
+    lines.forEach(l => { if (y < PH - BOT_LIMIT) { doc.text(l, RX+indent, y); y += size*0.42; } });
+    return y;
+  }
+
+  function rightBullet(text, y, size=7.8) {
+    if (y >= PH - BOT_LIMIT) return y;
+    doc.setFillColor(100,100,100);
+    doc.circle(RX + 2, y - 1.2, 0.8, 'F');
+    doc.setFont('helvetica','normal'); doc.setFontSize(size); doc.setTextColor(70,70,70);
+    const lines = doc.splitTextToSize(text, RW - 6);
+    lines.forEach((l,i) => { if (y < PH-BOT_LIMIT) { doc.text(l, RX+6, y); y += size*0.42; } });
+    return y + 0.5;
+  }
+
+  function leftBullet(text, y, size=7) {
+    if (y >= PH - BOT_LIMIT) return y;
+    doc.setFillColor(120,120,120);
+    doc.circle(LX + 1.8, y - 1.1, 0.7, 'F');
+    doc.setFont('helvetica','normal'); doc.setFontSize(size); doc.setTextColor(90,90,90);
+    const lines = doc.splitTextToSize(text, LEFT_W - LX - 8);
+    lines.forEach(l => { if (y < PH-BOT_LIMIT) { doc.text(l, LX+5, y); y += size*0.42; } });
+    return y + 0.5;
+  }
+
+  // ── LEFT COL: Contact icons ──────────────────────────
+  const iconSize = 4.5;
+  const iconGap  = 7.5;
+  function iconBox(y) {
+    doc.setFillColor(195,195,195);
+    doc.roundedRect(LX, y - iconSize + 1, iconSize, iconSize, 0.8, 0.8, 'F');
+    return y;
+  }
+
+  const contacts = [
+    parsed.phone || '07771548194',
+    parsed.email || 'fadhill.taariq@gmail.com',
+    parsed.github || 'github.com/fadhill-taariq',
+    parsed.linkedin || 'linkedin.com/in/taariq-fadhil',
+  ];
+  contacts.forEach(c => {
+    iconBox(ly);
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.8); doc.setTextColor(50,50,50);
+    doc.text(c, LX + iconSize + 2.5, ly - 0.8);
+    ly += iconGap;
+  });
+  ly += 4;
+
+  // ── LEFT COL: Education ──────────────────────────────
+  ly = sectionLeft('EDUCATION', ly);
+  const edu = parsed.education;
+  if (edu) {
+    ly = leftText(edu.degree || 'Bachelor of Computer Science', ly, { bold:true, size:7.2, color:[25,25,25] });
+    ly += 0.5;
+    ly = leftText(edu.institution || 'University of Exeter', ly, { size:6.8, color:[80,80,80] });
+    ly = leftText(edu.years || '2021–2024', ly, { size:6.8, color:[110,110,110] });
+    ly += 1.5;
+    (edu.bullets||[]).forEach(b => { ly = leftBullet(b, ly, 6.8); });
+  }
+  ly += 6;
+
+  // ── LEFT COL: Technical Skills ───────────────────────
+  ly = sectionLeft('TECHNICAL SKILLS', ly);
+  (parsed.skills||[]).forEach(sk => {
+    ly = leftText(sk, ly, { size:6.8, color:[80,80,80] });
+    ly += 2.5;
+  });
+
+  // ── RIGHT COL: Summary ───────────────────────────────
+  ry = sectionRight('SUMMARY', ry);
+  (parsed.summary||[]).forEach(b => { ry = rightBullet(b, ry); });
+  ry += 5;
+
+  // ── RIGHT COL: Work Experience ───────────────────────
+  ry = sectionRight('WORK EXPERIENCE', ry);
+  (parsed.experience||[]).forEach(job => {
+    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(25,25,25);
+    doc.text((job.title||'').toUpperCase(), RX, ry);
+    ry += 4;
+    // Company + period on same line
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(100,100,100);
+    doc.text((job.company||'').toUpperCase(), RX, ry);
+    if (job.period) {
+      doc.setTextColor(130,130,130);
+      doc.text(job.period, PW-8, ry, { align:'right' });
+    }
+    ry += 4.5;
+    (job.bullets||[]).forEach(b => { ry = rightBullet(b, ry); });
+    ry += 4;
+  });
+
+  // ── RIGHT COL: Projects ──────────────────────────────
+  ry = sectionRight('PROJECT EXAMPLES', ry);
+  (parsed.projects||[]).forEach(proj => {
+    const header = proj.stack ? `${proj.title} — ${proj.stack}` : proj.title;
+    doc.setFont('helvetica','bold'); doc.setFontSize(7.8); doc.setTextColor(40,40,40);
+    const plines = doc.splitTextToSize(header, RW);
+    plines.forEach(l => { if (ry < PH-BOT_LIMIT) { doc.text(l, RX, ry); ry += 4; } });
+    (proj.bullets||[]).forEach(b => { ry = rightBullet(b, ry, 7.5); });
+    ry += 4;
+  });
+
+  doc.save(filename);
+  showToast('CV exported in Canva layout ✓', 'success');
+}
+
+// Parse plain-text CV into structured sections for the Canva layout
+function parseCVText(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const result = {
+    phone: '07771548194', email: 'fadhill.taariq@gmail.com',
+    github: 'github.com/fadhill-taariq', linkedin: 'linkedin.com/in/taariq-fadhil',
+    education: { degree:'Bachelor of Computer Science', institution:'University of Exeter', years:'2021–2024', bullets:[] },
+    skills: [], summary: [], experience: [], projects: []
+  };
+
+  let section = '';
+  let currentJob = null;
+  let currentProj = null;
+
+  lines.forEach(line => {
+    const up = line.toUpperCase();
+    // Detect section headers
+    if (up.includes('SUMMARY') && line.length < 25) { section='summary'; return; }
+    if (up.includes('EDUCATION') && line.length < 20) { section='education'; return; }
+    if ((up.includes('WORK EXPERIENCE') || up.includes('EXPERIENCE')) && line.length < 30) { section='experience'; return; }
+    if (up.includes('TECHNICAL SKILLS') || up.includes('SKILLS')) { section='skills'; return; }
+    if (up.includes('PROJECT') && line.length < 25) { section='projects'; return; }
+
+    const isBullet = line.startsWith('-') || line.startsWith('•');
+    const clean = line.replace(/^[-•]\s*/, '');
+
+    if (section === 'summary' && isBullet) { result.summary.push(clean); return; }
+    if (section === 'summary' && !isBullet && line.length > 20) { result.summary.push(clean); return; }
+
+    if (section === 'education') {
+      if (isBullet) { result.education.bullets.push(clean); return; }
+      if (/\d{4}/.test(line)) { result.education.years = line; return; }
+      if (line.length > 5 && !result.education.institution.includes(line.split(' ')[0])) {
+        // additional edu lines become bullets
+        result.education.bullets.push(clean);
+      }
+      return;
+    }
+
+    if (section === 'skills') {
+      result.skills.push(clean || line);
+      return;
+    }
+
+    if (section === 'experience') {
+      if (!isBullet && line.length > 3) {
+        // Could be a job title, company, or period
+        if (currentJob && !isBullet) {
+          // Check if it looks like a company/period line
+          if (currentJob.bullets.length === 0 && !currentJob.company) {
+            currentJob.company = line; return;
+          } else if (line === 'Current' || /\d{4}/.test(line)) {
+            currentJob.period = line; return;
+          }
+        }
+        // New job entry
+        currentJob = { title: line, company: '', period: '', bullets: [] };
+        result.experience.push(currentJob);
+      } else if (isBullet && currentJob) {
+        currentJob.bullets.push(clean);
+      }
+      return;
+    }
+
+    if (section === 'projects') {
+      if (!isBullet && line.length > 3) {
+        const dashIdx = line.indexOf('—');
+        currentProj = {
+          title: dashIdx > 0 ? line.substring(0, dashIdx).trim() : line,
+          stack: dashIdx > 0 ? line.substring(dashIdx+1).trim() : '',
+          bullets: []
+        };
+        result.projects.push(currentProj);
+      } else if (isBullet && currentProj) {
+        currentProj.bullets.push(clean);
+      }
+      return;
+    }
+  });
+
+  return result;
+}
+
+function exportCoverLetterPDF(company, role, filename) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  const PW=210, PH=297, M=22, LH=6;
+  let y = M;
+
+  // Header — matches CV style
+  doc.setFillColor(245,245,245);
+  doc.rect(0,0,PW,20,'F');
+  doc.setDrawColor(200,200,200); doc.setLineWidth(0.3);
+  doc.line(0,20,PW,20);
+  doc.setFont('helvetica','bold'); doc.setFontSize(14);
+  doc.setTextColor(25,25,25);
+  doc.text('TAARIQ FADHIL', PW/2, 13, { align:'center', charSpace:1.5 });
+  y = 30;
+
+  // Contact strip
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(120,120,120);
+  doc.text('07771548194  ·  fadhill.taariq@gmail.com  ·  github.com/fadhill-taariq  ·  linkedin.com/in/taariq-fadhil', PW/2, y, { align:'center' });
+  y += 2.5;
+  doc.setDrawColor(210,210,210); doc.setLineWidth(0.25);
+  doc.line(M, y, PW-M, y);
+  y += 9;
+
+  // Date + addressee block
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(70,70,70);
+  doc.text(new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' }), M, y);
+  y += 6;
+  if (company && company !== 'Application') {
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(25,25,25);
+    doc.text(company, M, y); y += 5;
+  }
+  if (role) {
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(90,90,90);
+    doc.text('Re: Application for ' + role, M, y); y += 9;
+  } else { y += 4; }
+
+  // Body — render paragraph by paragraph preserving the template's voice
+  const body = document.getElementById('coverOutput').textContent.trim();
+
+  // Normalise: handle both \n\n and single \n as paragraph breaks
+  // Split on blank lines first, then on lines that look like new paragraphs
+  const paras = body
+    .split(/\n{2,}/)                         // split on blank lines
+    .flatMap(p => p.trim() ? [p.trim()] : []) // remove empties
+    .filter(Boolean);
+
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(35,35,35);
+
+  paras.forEach(para => {
+    // "Sincerely," and the name are already in the generated text — render them naturally
+    const isSigning = /^(sincerely|yours sincerely|regards|kind regards)/i.test(para);
+    if (isSigning) {
+      y += 4; // extra space before sign-off
+      doc.setFont('helvetica','normal');
+    }
+
+    const wrapped = doc.splitTextToSize(para, PW - M*2);
+    wrapped.forEach(line => {
+      if (y > PH - 18) { doc.addPage(); y = M; }
+      doc.text(line, M, y);
+      y += LH;
+    });
+    y += 3.5; // paragraph gap
+  });
+
+  doc.save(filename);
+  showToast('Cover letter exported ✓', 'success');
+}
+
+// ── SCRAPER ───────────────────────────────────────────
+async function scrapeJobs() {
+  const keywords = document.getElementById('searchKeywords').value.trim();
+  const minScore = parseInt(document.getElementById('scoreThreshold').value);
+  const err = document.getElementById('scrapeError');
+  err.classList.remove('visible');
+  if (!keywords) { err.textContent = 'Enter search keywords.'; err.classList.add('visible'); return; }
+
+  document.getElementById('scrapeBtn').disabled = true;
+  document.getElementById('scrapeStatus').style.display = 'flex';
+  document.getElementById('scrapeStatusText').textContent = 'Fetching job listings...';
+  document.getElementById('filterBar').style.display = 'none';
+  document.getElementById('apiNotice').style.display = 'block';
+  document.getElementById('jobFeed').innerHTML = '';
+
+  // Filter demo jobs by keywords
+  const kws = keywords.toLowerCase().split(' ').filter(k=>k.length>2);
+  let pool = DEMO_JOBS.filter(j => kws.some(k =>
+    j.title.toLowerCase().includes(k) ||
+    j.description.toLowerCase().includes(k) ||
+    j.type.toLowerCase().includes(k)
+  ));
+  if (pool.length === 0) pool = DEMO_JOBS.slice(0,5);
+
+  document.getElementById('scrapeStatusText').textContent = `Scoring ${pool.length} listings with Claude...`;
+
+  const scored = [];
+  for (let i=0; i<pool.length; i++) {
+    const job = pool[i];
+    document.getElementById('scrapeStatusText').textContent = `Scoring ${i+1}/${pool.length}: ${job.title} @ ${job.company}`;
+    try {
+      const p = `Score this job 1-10 for candidate fit. Return ONLY JSON: {"score":7,"reason":"max 12 words explaining fit"}
+
+Candidate: CS graduate, Python/TypeScript/JavaScript, Django, Node.js, REST APIs, SQL/MySQL/BigQuery, GCP, Git, Linux, ML basics, Data Viz, TypeScript production site, OOP Java, attention to detail, BFSI awareness.
+
+Job: ${job.title} at ${job.company}
+${job.description.substring(0,350)}`;
+      const d = await callClaude(p, 150);
+      const r = safeParseJSON(extractText(d), { score: 5, reason: 'Could not score' });
+      scored.push({ ...job, score:r.score, reason:r.reason });
+    } catch { scored.push({ ...job, score:5, reason:'Scoring unavailable — is Ollama running?' }); }
+  }
+
+  state.allJobs = scored.sort((a,b)=>b.score-a.score);
+  document.getElementById('scrapeBtn').disabled = false;
+  document.getElementById('scrapeStatus').style.display = 'none';
+  document.getElementById('filterBar').style.display = 'flex';
+  renderJobs(minScore);
+}
+
+function renderJobs(minScore) {
+  const feed = document.getElementById('jobFeed');
+  const visible = state.allJobs.filter(j => {
+    const ok = j.score >= minScore;
+    const f = state.activeFilter;
+    const match = f === 'all' || j.title.includes(f) || j.type.includes(f) || j.location.includes(f) || j.description.includes(f);
+    return ok && match;
+  });
+
+  if (!visible.length) {
+    feed.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--muted);">
+      <div style="font-size:32px;margin-bottom:12px;">🔍</div>
+      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px;">No jobs match your filters</div>
+      <div style="font-size:11px;">Try lowering the fit score threshold or broadening your keywords.</div>
+    </div>`;
+    return;
+  }
+
+  feed.innerHTML = visible.map(job => {
+    const applied = state.applications.some(a => a.company===job.company && a.role===job.title);
+    const sc = job.score;
+    const col = sc>=8?'var(--success)':sc>=6?'var(--accent)':'var(--warn)';
+    return `<div class="job-card ${applied?'applied':''}" id="jc-${job.id}">
+      ${applied?'<div class="applied-stamp">✓ Applied</div>':''}
+      <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:6px;">
+        <div style="flex:1;">
+          <div class="job-title">${job.title}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px;">${job.company}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:${col};">${sc}/10</div>
+          <div style="font-size:9px;color:var(--muted);">fit score</div>
+        </div>
+      </div>
+      <div class="job-meta">
+        <span class="job-tag">📍 ${job.location}</span>
+        <span class="job-tag">💰 ${job.salary}</span>
+        <span class="job-tag">${job.type}</span>
+        <span class="job-tag">via ${job.source}</span>
+      </div>
+      <div class="job-snippet">${job.description}</div>
+      ${job.reason?`<div style="font-size:10px;color:var(--muted);font-style:italic;margin-top:6px;">${job.reason}</div>`:''}
+      <div class="job-actions">
+        <button class="btn-ghost" style="padding:7px 14px;" onclick="loadJob(${job.id})">⚡ Generate Application</button>
+        <a href="${job.url}" target="_blank" style="text-decoration:none;"><button class="btn-ghost" style="padding:7px 14px;">↗ View Listing</button></a>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterJobs(f, el) {
+  state.activeFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderJobs(parseInt(document.getElementById('scoreThreshold').value));
+}
+
+function loadJob(id) {
+  const job = state.allJobs.find(j=>j.id===id);
+  if (!job) return;
+  document.getElementById('jobInput').value = job.description;
+  document.getElementById('companyInput').value = job.company;
+  document.getElementById('roleInput').value = job.title;
+  // Navigate to generate
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-generate').classList.add('active');
+  document.querySelectorAll('.nav-tab')[0].classList.add('active');
+  window.scrollTo({ top:0, behavior:'smooth' });
+  showToast('Job loaded — hit Generate! ⚡', 'success');
+}
+
+// ── TRACKER ───────────────────────────────────────────
+function logApplication() {
+  if (!state.currentResult) { showToast('Generate an application first.', 'error'); return; }
+  const entry = {
+    id: Date.now(),
+    role: state.currentResult.role || document.getElementById('roleInput').value || 'Unknown Role',
+    company: state.currentResult.company || document.getElementById('companyInput').value || 'Unknown',
+    score: state.currentResult.score,
+    date: new Date().toISOString(),
+    status: 'Applied'
+  };
+  state.applications.unshift(entry);
+  localStorage.setItem('tf_apps', JSON.stringify(state.applications));
+  document.getElementById('trackerCount').textContent = state.applications.length;
+  showToast('Logged to tracker ✓', 'success');
+}
+
+function renderTracker() {
+  const apps = state.applications;
+  document.getElementById('stat-total').textContent = apps.length;
+  document.getElementById('trackerCount').textContent = apps.length;
+  if (apps.length > 0) {
+    document.getElementById('stat-avgScore').textContent = (apps.reduce((s,a)=>s+(a.score||0),0)/apps.length).toFixed(1);
+    document.getElementById('stat-thisWeek').textContent = apps.filter(a=>new Date(a.date)>new Date(Date.now()-7*864e5)).length;
+    const rc={};
+    apps.forEach(a=>{ const t=a.role.includes('Data')?'Data':a.role.includes('Backend')?'Backend':a.role.includes('Graduate')?'Graduate':'Dev'; rc[t]=(rc[t]||0)+1; });
+    const top=Object.entries(rc).sort((a,b)=>b[1]-a[1])[0];
+    document.getElementById('stat-topRole').textContent = top?top[0]:'—';
+  }
+  const tbody = document.getElementById('logTableBody');
+  if (!apps.length) {
+    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:48px;color:var(--muted);">No applications logged yet — generate one and hit "Log as Applied"</td></tr>';
+    return;
+  }
+  tbody.innerHTML = apps.map(a=>{
+    const sc=a.score||'—', col=sc>=8?'var(--success)':sc>=6?'var(--accent)':'var(--warn)';
+    const d=new Date(a.date).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    return `<tr>
+      <td style="font-family:'Syne',sans-serif;font-weight:600;">${a.role}</td>
+      <td style="color:var(--muted);">${a.company}</td>
+      <td><span style="color:${col};font-family:'Syne',sans-serif;font-weight:700;">${sc}/10</span></td>
+      <td style="color:var(--muted);">${d}</td>
+      <td><span class="badge badge-green">${a.status}</span></td>
+      <td><button class="btn-danger" onclick="deleteApp(${a.id})">Remove</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function deleteApp(id) {
+  state.applications = state.applications.filter(a=>a.id!==id);
+  localStorage.setItem('tf_apps', JSON.stringify(state.applications));
+  renderTracker();
+}
+
+// ── LOCAL LLM (OLLAMA) ────────────────────────────────
+const OLLAMA_BASE = 'http://localhost:11434';
+let ollamaModel = localStorage.getItem('ollama_model') || 'llama3';
+let ollamaStatus = 'unknown'; // 'ok' | 'error' | 'unknown'
+
+async function callClaude(prompt, maxTokens=1000) {
+  // Ollama /api/generate endpoint (no streaming — wait=true)
+  const r = await fetch(`${OLLAMA_BASE}/api/generate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: ollamaModel,
+      prompt: prompt,
+      stream: false,
+      options: { num_predict: maxTokens, temperature: 0.3 }
+    })
+  });
+  if (!r.ok) throw new Error(`Ollama error: ${r.status} ${r.statusText}`);
+  const data = await r.json();
+  // Normalise to same shape callClaude callers expect: data.content[].text
+  return { content: [{ type: 'text', text: data.response || '' }] };
+}
+
+async function checkOllama() {
+  const indicator = document.getElementById('ollamaIndicator');
+  const label     = document.getElementById('ollamaLabel');
+  try {
+    const r = await fetch(`${OLLAMA_BASE}/api/tags`, { signal: AbortSignal.timeout(2500) });
+    if (!r.ok) throw new Error();
+    const data = await r.json();
+    const models = (data.models || []).map(m => m.name);
+    ollamaStatus = 'ok';
+    indicator.style.background = '#42f5a8';
+    label.textContent = `Ollama running · ${models.length} model${models.length!==1?'s':''} available`;
+    // Populate model selector
+    const sel = document.getElementById('modelSelect');
+    sel.innerHTML = '';
+    if (models.length === 0) {
+      sel.innerHTML = '<option value="">No models — run: ollama pull llama3</option>';
+    } else {
+      models.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m; opt.textContent = m;
+        if (m.startsWith(ollamaModel)) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      ollamaModel = sel.value;
+      localStorage.setItem('ollama_model', ollamaModel);
+    }
+    document.getElementById('ollamaSetup').style.display = 'none';
+  } catch(e) {
+    ollamaStatus = 'error';
+    indicator.style.background = '#f55442';
+    label.textContent = 'Ollama not detected — see setup below';
+    document.getElementById('ollamaSetup').style.display = 'block';
+  }
+}
+
+function onModelChange(val) {
+  ollamaModel = val;
+  localStorage.setItem('ollama_model', val);
+}
+
+function setLoading(show, step, label) {
+  document.getElementById('loadingOverlay').classList.toggle('visible', show);
+  if (step) document.getElementById('loadingStep').textContent = step;
+  if (label) document.getElementById('loadingLabel').textContent = label;
+}
+
+function setLoadingText(step, label) {
+  document.getElementById('loadingStep').textContent = step;
+  document.getElementById('loadingLabel').textContent = label;
+}
+
+// Pull the text string out of whatever shape callClaude returns
+function extractText(data) {
+  return (data.content || []).map(b => b.text || '').join('').trim();
+}
+
+// Try to parse JSON — strip markdown fences, extract first {...} block if needed
+function safeParseJSON(text, fallback = {}) {
+  try {
+    // Strip ```json ... ``` fences
+    let clean = text.replace(/^```json\s*|^```\s*|\s*```$/gm, '').trim();
+    // If model added preamble, find the first { ... } block
+    const start = clean.indexOf('{');
+    const end   = clean.lastIndexOf('}');
+    if (start !== -1 && end !== -1) clean = clean.slice(start, end + 1);
+    return JSON.parse(clean);
+  } catch {
+    console.warn('JSON parse failed on:', text.substring(0, 200));
+    return fallback;
+  }
+}
+
+function switchTab(name, el) {
+  document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  (el||event.currentTarget).classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+function copyText(id, btn) {
+  navigator.clipboard.writeText(document.getElementById(id).textContent).then(()=>{
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    setTimeout(()=>btn.textContent=orig, 2000);
+  });
+}
+
+function clearGen() {
+  ['jobInput','companyInput','roleInput'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('resultsSection').classList.remove('visible');
+  document.getElementById('genError').classList.remove('visible');
+}
+
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast '+type;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3200);
+}
+
+// Init
+document.getElementById('trackerCount').textContent = state.applications.length;
+renderTracker();
+checkOllama(); // auto-check Ollama on load
+</script>
+</body>
+</html>
