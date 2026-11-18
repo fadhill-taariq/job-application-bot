@@ -27,10 +27,12 @@ A local, single-file job application assistant powered by [Ollama](https://ollam
 ## Quick Setup
 
 **1. Install Ollama**
-```bash
-curl -fsSL https://ollama.com/install.sh | sh
-```
-Or download from [ollama.com](https://ollama.com) (Mac / Windows / Linux)
+
+- **Windows / Mac:** download the installer from [ollama.com/download](https://ollama.com/download)
+- **Linux:**
+  ```bash
+  curl -fsSL https://ollama.com/install.sh | sh
+  ```
 
 **2. Pull a model** (pick one)
 ```bash
@@ -40,13 +42,22 @@ ollama pull phi3        # 2.3 GB — lightweight
 ```
 
 **3. Start Ollama with browser access (CORS)**
+
+Windows (PowerShell):
+```powershell
+$env:OLLAMA_ORIGINS="*"; ollama serve
+```
+
+Mac / Linux:
 ```bash
 OLLAMA_ORIGINS="*" ollama serve
 ```
 
+If you get "address already in use", Ollama is already running in the background. Quit it from the system tray / menu bar and run the command again. Keep this window open while using the app.
+
 **4. Open the app**
 
-Just open `index.html` in your browser — no build step, no server needed.
+Extract the zip first, then open `index.html` in your browser — no build step, no server needed.
 
 ## How It Works
 

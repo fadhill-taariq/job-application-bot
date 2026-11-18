@@ -183,8 +183,8 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:14px;
     <div style="display:flex;flex-direction:column;gap:10px;">
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 18px;">
         <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:8px;">1 · Install Ollama</div>
-        <code style="font-size:12px;color:var(--accent);">curl -fsSL https://ollama.com/install.sh | sh</code>
-        <div style="font-size:10px;color:var(--muted);margin-top:4px;">Or download from <a href="https://ollama.com" target="_blank" style="color:var(--accent);">ollama.com</a> (Mac/Windows/Linux)</div>
+        <div style="font-size:11px;color:var(--text);">Windows / Mac: download the installer from <a href="https://ollama.com/download" target="_blank" style="color:var(--accent);">ollama.com/download</a></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:6px;">Linux: <code style="color:var(--accent);">curl -fsSL https://ollama.com/install.sh | sh</code></div>
       </div>
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 18px;">
         <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:8px;">2 · Pull a model (pick one)</div>
@@ -196,8 +196,11 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:14px;
       </div>
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 18px;">
         <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:8px;">3 · Enable browser access (CORS)</div>
-        <code style="font-size:12px;color:var(--accent);">OLLAMA_ORIGINS="*" ollama serve</code>
-        <div style="font-size:10px;color:var(--muted);margin-top:4px;">This allows the local HTML file to talk to Ollama. Run this instead of the default <code>ollama serve</code>.</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;align-items:center;gap:12px;"><code style="font-size:12px;color:var(--accent);flex:1;">$env:OLLAMA_ORIGINS="*"; ollama serve</code><span style="font-size:10px;color:var(--muted);">Windows (PowerShell)</span></div>
+          <div style="display:flex;align-items:center;gap:12px;"><code style="font-size:12px;color:var(--text);flex:1;">OLLAMA_ORIGINS="*" ollama serve</code><span style="font-size:10px;color:var(--muted);">Mac / Linux</span></div>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:6px;">This lets the local HTML file talk to Ollama. If it says the address is already in use, quit Ollama from the system tray / menu bar first, then run it again. Keep the window open while you use the bot.</div>
       </div>
     </div>
     <div style="margin-top:16px;display:flex;gap:10px;align-items:center;">
@@ -323,7 +326,7 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:14px;
     • <strong>Adzuna</strong>: <a href="https://developer.adzuna.com" target="_blank">developer.adzuna.com</a> — 250 req/day free<br>
     • <strong>Reed</strong>: <a href="https://www.reed.co.uk/developers/jobseeker" target="_blank">reed.co.uk/developers</a> — free<br>
     • <strong>Remotive</strong>: No key needed — public API for remote jobs<br><br>
-    Showing <strong>demo results</strong> for now — scored in real-time by Claude against your profile.
+    Showing <strong>demo results</strong> for now (Location and Source aren't wired up yet) — scored in real time by your local model against your profile.
   </div>
 
   <div class="filter-bar" id="filterBar" style="display:none;">
@@ -416,7 +419,7 @@ const STACK_VARIANTS = [
 // ── VARIANT POOL: GCP / cloud bullet ──────────────────
 const GCP_VARIANTS = [
   {
-    tags: ['bigquery', 'data pipeline', 'data engineering', 'warehouse'],
+    tags: ['bigquery', 'data pipeline', 'data engineering', 'data warehouse', 'data warehousing'],
     text: "Familiar with GCP including BigQuery for data querying and pipeline work, and Compute Engine from university AI/ML projects."
   },
   {
@@ -465,11 +468,18 @@ const CONDITIONAL_BULLETS = [
   },
 ];
 
+// Whole-word match so short tags like 'ai', 'ml' or 'bi' don't fire on
+// 'maintain', 'html' or 'ability'
+function hasTag(jd, tag) {
+  const esc = tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp('(^|[^a-z0-9])' + esc + '(?![a-z0-9])').test(jd);
+}
+
 // Pick the best-matching variant from a pool
 function pickVariant(pool, jd) {
   for (const v of pool) {
     if (v.tags.includes('default')) continue; // skip fallback in first pass
-    if (v.tags.some(tag => jd.includes(tag))) return v.text;
+    if (v.tags.some(tag => hasTag(jd, tag))) return v.text;
   }
   // Fall back to default
   return pool.find(v => v.tags.includes('default'))?.text || '';
@@ -492,12 +502,12 @@ function buildSummary(jobText) {
 
   // 4 & 5. Conditional bullets — pick the two most relevant
   const matched = CONDITIONAL_BULLETS.filter(b =>
-    b.tags.some(tag => jd.includes(tag))
+    b.tags.some(tag => hasTag(jd, tag))
   );
 
   // GCP variant — only add if JD mentions cloud/ML/GCP
   const gcpTriggers = ['gcp','cloud','google cloud','compute engine','ml','machine learning','ai','bigquery','vertex'];
-  if (gcpTriggers.some(t => jd.includes(t))) {
+  if (gcpTriggers.some(t => hasTag(jd, t))) {
     matched.unshift({ text: pickVariant(GCP_VARIANTS, jd), _isGcp: true });
   }
 
@@ -543,7 +553,7 @@ Tetris Website — Python, HTML, CSS, PHP, JavaScript
 Browser-playable Tetris with score tracking, leaderboard and MySQL-backed authentication
 
 Dissertation: Predictive Modelling — Python, Data Analysis & Visualisation
-Linear and logistic regression models; feature selection, preprocessing, model visualisation
+Linear regression and random forest models; feature selection, preprocessing, model visualisation
 
 COVID-19 Real-Time News Dashboard
 Live data news feed displaying real-time pandemic statistics
@@ -667,7 +677,7 @@ I am applying for the ____ position at ____. I am a Computer Science graduate wi
 
 In my recent freelance work within the healthcare sector, I expanded and maintained a production website using TypeScript and a headless CMS architecture powered by Sanity.io. I implemented GROQ queries for dynamic delivery, and built HTTP services to support frontend data consumption. This work built upon my understanding of API design and collaboration with copywriters in a regulated environment.
 
-Furthermore, I have developed several backend-focused academic and personal projects. I built a browser-playable game of Tetris featuring a MySQL leaderboard system with authentication through a login system and score ranking logic, combining database design with interactive frontend gameplay. For my dissertation, I created predictive models using Python and scikit-learn, implementing linear regression and random forest models to predict how students perceive their stress levels during university. This included featured preprocessing, and evaluating model performance across structured datasets that I curated myself.
+Furthermore, I have developed several backend-focused academic and personal projects. I built a browser-playable game of Tetris featuring a MySQL leaderboard system with authentication through a login system and score ranking logic, combining database design with interactive frontend gameplay. For my dissertation, I created predictive models using Python and scikit-learn, implementing linear regression and random forest models to predict how students perceive their stress levels during university. This included feature preprocessing and evaluating model performance across structured datasets that I curated myself.
 
 My broader experience includes object-oriented programming in Java through pair-programming software projects, as well as real-time dashboard developments utilising API integration. These experiences have strengthened my foundations in algorithm design, data handling, and system architecture. I am particularly interested in continuing to grow in backend and cloud-based environments.
 
@@ -683,7 +693,7 @@ Taariq Fadhil
 
 Output the tailored cover letter only. Start with "Dear Hiring Manager,".`;
 
-    const coverData = await callClaude(coverPrompt, 800);
+    const coverData = await callClaude(coverPrompt, 1200);
     const coverLetter = extractText(coverData).trim();
 
     setLoading(false);
@@ -750,6 +760,9 @@ function exportPDF(type) {
   const BOT_LIMIT = 12;        // bottom margin stop
 
   // Helpers: jsPDF y=0 is top-left
+  let overflow = false; // set when something doesn't fit on the page
+  function fits(y) { if (y < PH - BOT_LIMIT) return true; overflow = true; return false; }
+
   let ly = HEADER_H + 8; // left col cursor (mm from top)
   let ry = HEADER_H + 8; // right col cursor
 
@@ -806,7 +819,7 @@ function exportPDF(type) {
     doc.setFont('helvetica', bold?'bold':'normal');
     doc.setFontSize(size); doc.setTextColor(...color);
     const lines = doc.splitTextToSize(text, LEFT_W - LX - 5 - indent);
-    lines.forEach(l => { if (y < PH - BOT_LIMIT) { doc.text(l, LX+indent, y); y += size*0.42; } });
+    lines.forEach(l => { if (fits(y)) { doc.text(l, LX+indent, y); y += size*0.42; } });
     return y;
   }
 
@@ -814,27 +827,27 @@ function exportPDF(type) {
     doc.setFont('helvetica', bold?'bold':'normal');
     doc.setFontSize(size); doc.setTextColor(...color);
     const lines = doc.splitTextToSize(text, RW - indent);
-    lines.forEach(l => { if (y < PH - BOT_LIMIT) { doc.text(l, RX+indent, y); y += size*0.42; } });
+    lines.forEach(l => { if (fits(y)) { doc.text(l, RX+indent, y); y += size*0.42; } });
     return y;
   }
 
   function rightBullet(text, y, size=7.8) {
-    if (y >= PH - BOT_LIMIT) return y;
+    if (!fits(y)) return y;
     doc.setFillColor(100,100,100);
     doc.circle(RX + 2, y - 1.2, 0.8, 'F');
     doc.setFont('helvetica','normal'); doc.setFontSize(size); doc.setTextColor(70,70,70);
     const lines = doc.splitTextToSize(text, RW - 6);
-    lines.forEach((l,i) => { if (y < PH-BOT_LIMIT) { doc.text(l, RX+6, y); y += size*0.42; } });
+    lines.forEach((l,i) => { if (fits(y)) { doc.text(l, RX+6, y); y += size*0.42; } });
     return y + 0.5;
   }
 
   function leftBullet(text, y, size=7) {
-    if (y >= PH - BOT_LIMIT) return y;
+    if (!fits(y)) return y;
     doc.setFillColor(120,120,120);
     doc.circle(LX + 1.8, y - 1.1, 0.7, 'F');
     doc.setFont('helvetica','normal'); doc.setFontSize(size); doc.setTextColor(90,90,90);
     const lines = doc.splitTextToSize(text, LEFT_W - LX - 8);
-    lines.forEach(l => { if (y < PH-BOT_LIMIT) { doc.text(l, LX+5, y); y += size*0.42; } });
+    lines.forEach(l => { if (fits(y)) { doc.text(l, LX+5, y); y += size*0.42; } });
     return y + 0.5;
   }
 
@@ -889,17 +902,27 @@ function exportPDF(type) {
   // ── RIGHT COL: Work Experience ───────────────────────
   ry = sectionRight('WORK EXPERIENCE', ry);
   (parsed.experience||[]).forEach(job => {
+    if (!fits(ry)) return;
     doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(25,25,25);
-    doc.text((job.title||'').toUpperCase(), RX, ry);
-    ry += 4;
-    // Company + period on same line
-    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(100,100,100);
-    doc.text((job.company||'').toUpperCase(), RX, ry);
-    if (job.period) {
-      doc.setTextColor(130,130,130);
-      doc.text(job.period, PW-8, ry, { align:'right' });
+    doc.splitTextToSize((job.title||'').toUpperCase(), RW).forEach(l => {
+      if (fits(ry)) { doc.text(l, RX, ry); ry += 3.6; }
+    });
+    ry += 0.4;
+    // Company (left) + period (right) on the same line
+    if (job.company || job.period) {
+      doc.setFont('helvetica','normal'); doc.setFontSize(7.5);
+      let periodW = 0;
+      if (job.period) {
+        periodW = doc.getTextWidth(job.period) + 4;
+        doc.setTextColor(130,130,130);
+        if (fits(ry)) doc.text(job.period, PW-8, ry, { align:'right' });
+      }
+      doc.setTextColor(100,100,100);
+      const compLines = doc.splitTextToSize((job.company||'').toUpperCase(), RW - periodW);
+      compLines.forEach(l => { if (fits(ry)) { doc.text(l, RX, ry); ry += 3.4; } });
+      if (!compLines.length || !job.company) ry += 3.4;
+      ry += 1.1;
     }
-    ry += 4.5;
     (job.bullets||[]).forEach(b => { ry = rightBullet(b, ry); });
     ry += 4;
   });
@@ -910,18 +933,25 @@ function exportPDF(type) {
     const header = proj.stack ? `${proj.title} — ${proj.stack}` : proj.title;
     doc.setFont('helvetica','bold'); doc.setFontSize(7.8); doc.setTextColor(40,40,40);
     const plines = doc.splitTextToSize(header, RW);
-    plines.forEach(l => { if (ry < PH-BOT_LIMIT) { doc.text(l, RX, ry); ry += 4; } });
+    plines.forEach(l => { if (fits(ry)) { doc.text(l, RX, ry); ry += 4; } });
     (proj.bullets||[]).forEach(b => { ry = rightBullet(b, ry, 7.5); });
     ry += 4;
   });
 
   doc.save(filename);
-  showToast('CV exported in Canva layout ✓', 'success');
+  if (overflow) {
+    showToast('CV exported, but it ran past one page — some content was cut. Shorten the CV text and export again.', 'error');
+  } else {
+    showToast('CV exported in Canva layout ✓', 'success');
+  }
 }
 
 // Parse plain-text CV into structured sections for the Canva layout
 function parseCVText(text) {
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  // Strip markdown the model sometimes adds (**bold**, # headings)
+  const lines = text.split('\n')
+    .map(l => l.replace(/\*\*/g, '').replace(/^#+\s*/, '').trim())
+    .filter(Boolean);
   const result = {
     phone: '07771548194', email: 'fadhill.taariq@gmail.com',
     github: 'github.com/fadhill-taariq', linkedin: 'linkedin.com/in/taariq-fadhil',
@@ -929,70 +959,91 @@ function parseCVText(text) {
     skills: [], summary: [], experience: [], projects: []
   };
 
+  // A line is a section header only if it IS the header (ignoring case/punctuation),
+  // so a bullet mentioning "skills" or "experience" can't switch sections.
+  const HEADERS = {
+    'SUMMARY':'summary', 'PROFILE':'summary', 'PROFESSIONAL SUMMARY':'summary',
+    'EDUCATION':'education',
+    'WORK EXPERIENCE':'experience', 'EXPERIENCE':'experience', 'PROFESSIONAL EXPERIENCE':'experience', 'EMPLOYMENT':'experience',
+    'PROJECTS':'projects', 'PROJECT EXAMPLES':'projects', 'KEY PROJECTS':'projects',
+    'TECHNICAL SKILLS':'skills', 'SKILLS':'skills', 'KEY SKILLS':'skills'
+  };
+  const YEARS_RE = /\(?\s*((?:19|20)\d{2}\s*[–—-]\s*(?:(?:19|20)\d{2}|present|current)|(?:19|20)\d{2})\s*\)?/i;
+  const SEP_RE = /\s+[—–]\s+|\s+-\s+/; // "Title — Company"
+
   let section = '';
   let currentJob = null;
   let currentProj = null;
 
   lines.forEach(line => {
-    const up = line.toUpperCase();
-    // Detect section headers
-    if (up.includes('SUMMARY') && line.length < 25) { section='summary'; return; }
-    if (up.includes('EDUCATION') && line.length < 20) { section='education'; return; }
-    if ((up.includes('WORK EXPERIENCE') || up.includes('EXPERIENCE')) && line.length < 30) { section='experience'; return; }
-    if (up.includes('TECHNICAL SKILLS') || up.includes('SKILLS')) { section='skills'; return; }
-    if (up.includes('PROJECT') && line.length < 25) { section='projects'; return; }
+    const norm = line.toUpperCase().replace(/[^A-Z ]/g, '').replace(/\s+/g, ' ').trim();
+    if (HEADERS[norm]) { section = HEADERS[norm]; currentJob = null; currentProj = null; return; }
 
-    const isBullet = line.startsWith('-') || line.startsWith('•');
-    const clean = line.replace(/^[-•]\s*/, '');
+    const isBullet = /^[-•*·]\s*/.test(line);
+    const clean = line.replace(/^[-•*·]\s*/, '');
 
-    if (section === 'summary' && isBullet) { result.summary.push(clean); return; }
-    if (section === 'summary' && !isBullet && line.length > 20) { result.summary.push(clean); return; }
+    if (section === 'summary') {
+      if (isBullet || line.length > 20) result.summary.push(clean);
+      return;
+    }
 
     if (section === 'education') {
       if (isBullet) { result.education.bullets.push(clean); return; }
-      if (/\d{4}/.test(line)) { result.education.years = line; return; }
-      if (line.length > 5 && !result.education.institution.includes(line.split(' ')[0])) {
-        // additional edu lines become bullets
-        result.education.bullets.push(clean);
+      // "Degree — Institution (2021–2024)" on one line
+      if (SEP_RE.test(line) && !result.education._headerSeen) {
+        result.education._headerSeen = true;
+        const ym = line.match(YEARS_RE);
+        if (ym) result.education.years = ym[1];
+        const noYears = line.replace(YEARS_RE, '').trim();
+        const [deg, ...rest] = noYears.split(SEP_RE);
+        result.education.degree = deg.trim();
+        if (rest.length) result.education.institution = rest.join(' — ').trim();
+        return;
       }
+      if (/^(?:19|20)\d{2}/.test(line) && line.length < 20) { result.education.years = line; return; }
+      if (line.length > 5) result.education.bullets.push(clean);
       return;
     }
 
     if (section === 'skills') {
-      result.skills.push(clean || line);
+      result.skills.push(clean);
       return;
     }
 
     if (section === 'experience') {
-      if (!isBullet && line.length > 3) {
-        // Could be a job title, company, or period
-        if (currentJob && !isBullet) {
-          // Check if it looks like a company/period line
-          if (currentJob.bullets.length === 0 && !currentJob.company) {
-            currentJob.company = line; return;
-          } else if (line === 'Current' || /\d{4}/.test(line)) {
-            currentJob.period = line; return;
-          }
-        }
-        // New job entry
-        currentJob = { title: line, company: '', period: '', bullets: [] };
-        result.experience.push(currentJob);
-      } else if (isBullet && currentJob) {
-        currentJob.bullets.push(clean);
+      if (isBullet) { if (currentJob) currentJob.bullets.push(clean); return; }
+      // "Title — Company | Period"
+      let title = line, company = '', period = '';
+      const pipe = title.split(/\s*\|\s*/);
+      if (pipe.length > 1) { period = pipe.pop(); title = pipe.join(' | '); }
+      if (SEP_RE.test(title)) {
+        const [t, ...rest] = title.split(SEP_RE);
+        title = t; company = rest.join(' — ');
       }
+      // Lines under a job header that aren't bullets: fill company/period
+      if (currentJob && currentJob.bullets.length === 0 && !SEP_RE.test(line) && pipe.length === 1) {
+        if (!currentJob.company) { currentJob.company = line; return; }
+        if (!currentJob.period && (YEARS_RE.test(line) || /^(current|present)$/i.test(line))) { currentJob.period = line; return; }
+      }
+      currentJob = { title: title.trim(), company: company.trim(), period: period.trim(), bullets: [] };
+      result.experience.push(currentJob);
       return;
     }
 
     if (section === 'projects') {
-      if (!isBullet && line.length > 3) {
-        const dashIdx = line.indexOf('—');
+      if (isBullet) { if (currentProj) currentProj.bullets.push(clean); return; }
+      // New project if: none yet, the line has a "— stack" separator,
+      // or the current project already has its description.
+      if (!currentProj || SEP_RE.test(line) || currentProj.bullets.length > 0) {
+        const parts = line.split(SEP_RE);
         currentProj = {
-          title: dashIdx > 0 ? line.substring(0, dashIdx).trim() : line,
-          stack: dashIdx > 0 ? line.substring(dashIdx+1).trim() : '',
+          title: parts[0].trim(),
+          stack: parts.slice(1).join(' — ').trim(),
           bullets: []
         };
         result.projects.push(currentProj);
-      } else if (isBullet && currentProj) {
+      } else {
+        // Plain description line under a project header
         currentProj.bullets.push(clean);
       }
       return;
@@ -1098,7 +1149,7 @@ async function scrapeJobs() {
   ));
   if (pool.length === 0) pool = DEMO_JOBS.slice(0,5);
 
-  document.getElementById('scrapeStatusText').textContent = `Scoring ${pool.length} listings with Claude...`;
+  document.getElementById('scrapeStatusText').textContent = `Scoring ${pool.length} listings with ${ollamaModel}...`;
 
   const scored = [];
   for (let i=0; i<pool.length; i++) {
@@ -1264,7 +1315,7 @@ async function callClaude(prompt, maxTokens=1000) {
       model: ollamaModel,
       prompt: prompt,
       stream: false,
-      options: { num_predict: maxTokens, temperature: 0.3 }
+      options: { num_predict: maxTokens, temperature: 0.3, num_ctx: 8192 }
     })
   });
   if (!r.ok) throw new Error(`Ollama error: ${r.status} ${r.statusText}`);
