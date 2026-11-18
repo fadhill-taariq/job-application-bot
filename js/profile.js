@@ -254,14 +254,26 @@ const DEFAULT_PROFILE = {
 
 const PROFILE_KEY = 'tf_profile';
 
+// On the public hosted demo (e.g. GitHub Pages), don't show phone numbers or email
+// to visitors — the rest of the profile is shown as an example.
+const HOSTED_PUBLICLY = location.protocol === 'https:' ||
+  (location.protocol === 'http:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname));
+
+function baseProfile() {
+  const p = structuredClone(DEFAULT_PROFILE);
+  if (HOSTED_PUBLICLY) { p.phone = ''; p.email = ''; }
+  return p;
+}
+
 function loadProfile() {
+  const base = baseProfile();
   try {
     const saved = JSON.parse(localStorage.getItem(PROFILE_KEY) || 'null');
     if (saved && typeof saved === 'object') {
-      return { ...DEFAULT_PROFILE, ...saved, summary: { ...DEFAULT_PROFILE.summary, ...(saved.summary || {}) } };
+      return { ...base, ...saved, summary: { ...base.summary, ...(saved.summary || {}) } };
     }
   } catch (e) { console.warn('Saved profile unreadable, using defaults', e); }
-  return structuredClone(DEFAULT_PROFILE);
+  return base;
 }
 
 function saveProfile(p) {
@@ -270,7 +282,7 @@ function saveProfile(p) {
 
 function resetProfile() {
   localStorage.removeItem(PROFILE_KEY);
-  return structuredClone(DEFAULT_PROFILE);
+  return baseProfile();
 }
 
 let profile = loadProfile();

@@ -921,7 +921,8 @@ function importProfileJSON(input) {
   file.text().then(txt => {
     const data = JSON.parse(txt);
     if (!data || typeof data !== 'object' || !data.name || !data.cvBody) throw new Error('missing name or cvBody');
-    profile = { ...structuredClone(DEFAULT_PROFILE), ...data, summary: { ...DEFAULT_PROFILE.summary, ...(data.summary || {}) } };
+    const base = baseProfile();
+    profile = { ...base, ...data, summary: { ...base.summary, ...(data.summary || {}) } };
     saveProfile(profile);
     renderProfileForm(); applyProfileBranding();
     showToast('Profile imported ✓', 'success');

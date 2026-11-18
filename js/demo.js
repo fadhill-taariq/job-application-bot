@@ -12,7 +12,7 @@ function demoRequested() {
 }
 
 function isHostedOnWeb() {
-  return location.protocol === 'https:' || location.protocol === 'http:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+  return HOSTED_PUBLICLY;
 }
 
 function enableDemo() {
