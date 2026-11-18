@@ -169,6 +169,12 @@ function exportPDF(type) {
   const cvText = document.getElementById('cvOutput').innerText;
   const parsed = parseCVText(cvText);
 
+  if (getCVLayout() === 'classic') {
+    exportClassicCV(parsed, filename);
+    showToast('CV exported ✓', 'success');
+    return;
+  }
+
   // ── LAYOUT CONSTANTS (matching Canva template) ──────
   const HEADER_H  = 25;       // name banner height
   const LEFT_W    = PW * 0.37; // left col width
@@ -368,7 +374,7 @@ function parseCVText(text) {
     .filter(Boolean);
   const result = {
     education: { degree:'', institution:'', years:'', bullets:[] },
-    skills: [], summary: [], experience: [], projects: []
+    skills: [], summary: [], experience: [], projects: [], headings: {}
   };
 
   // A line is a section header only if it IS the header (ignoring case/punctuation),
@@ -390,7 +396,11 @@ function parseCVText(text) {
 
   lines.forEach(line => {
     const norm = line.toUpperCase().replace(/[^A-Z ]/g, '').replace(/\s+/g, ' ').trim();
-    if (HEADERS[norm]) { section = HEADERS[norm]; currentJob = null; currentProj = null; return; }
+    if (HEADERS[norm]) {
+      section = HEADERS[norm]; currentJob = null; currentProj = null;
+      result.headings[section] = line.replace(/:\s*$/, '').trim();
+      return;
+    }
 
     const isBullet = /^[-•*·]\s*/.test(line);
     const clean = line.replace(/^[-•*·]\s*/, '');
@@ -447,11 +457,14 @@ function parseCVText(text) {
       if (isBullet) { if (currentProj) currentProj.bullets.push(clean); return; }
       // New project if: none yet, the line has a "— stack" separator,
       // or the current project already has its description.
-      if (!currentProj || SEP_RE.test(line) || currentProj.bullets.length > 0) {
-        const parts = line.split(SEP_RE);
+      if (!currentProj || SEP_RE.test(line) || /\s\|\s/.test(line) || currentProj.bullets.length > 0) {
+        const pipe = line.split(/\s+\|\s+/);
+        const link = pipe.length > 1 ? pipe.pop().trim() : '';
+        const parts = pipe.join(' | ').split(SEP_RE);
         currentProj = {
           title: parts[0].trim(),
           stack: parts.slice(1).join(' — ').trim(),
+          link,
           bullets: []
         };
         result.projects.push(currentProj);
@@ -972,6 +985,7 @@ function applyProfileBranding() {
 
 // Init
 applyProfileBranding();
+document.getElementById('cvLayout').value = getCVLayout();
 updateSourceSelect();
 document.getElementById('trackerCount').textContent = state.applications.length;
 renderTracker();
