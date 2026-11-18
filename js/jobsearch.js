@@ -5,7 +5,8 @@
 // Get a free key: https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch
 
 const JSEARCH_KEY = 'jsearch_api_key';
-const JSEARCH_URL = 'https://jsearch.p.rapidapi.com/search';
+// JSearch retired /search in Nov 2026; /search-v2 returns { data: { jobs: [...], cursor } }
+const JSEARCH_URL = 'https://jsearch.p.rapidapi.com/search-v2';
 
 function getJSearchKey() {
   try { return (localStorage.getItem(JSEARCH_KEY) || '').trim(); } catch { return ''; }
@@ -47,7 +48,7 @@ async function fetchJSearchJobs(opts) {
   const key = getJSearchKey();
   if (!key) throw new Error('Add your JSearch API key in the Profile tab first.');
   const query = opts.location ? `${opts.keywords} in ${opts.location}` : opts.keywords;
-  const params = new URLSearchParams({ query, page: '1', num_pages: '1', date_posted: opts.datePosted || 'all' });
+  const params = new URLSearchParams({ query, date_posted: opts.datePosted || 'all' });
   if (opts.country) params.set('country', opts.country);
 
   let r;
@@ -67,7 +68,10 @@ async function fetchJSearchJobs(opts) {
     if (r.status === 429) throw new Error('JSearch limit reached (the free plan allows 200 searches a month). Try again next month or upgrade on RapidAPI.');
     throw new Error(`JSearch error ${r.status}: ${msg}`);
   }
-  return ((body && body.data) || []).map(mapJSearchJob);
+  // v2: data.jobs; older v1 responses: data is the array itself
+  const d = body && body.data;
+  const jobs = Array.isArray(d) ? d : (d && Array.isArray(d.jobs) ? d.jobs : []);
+  return jobs.map(mapJSearchJob);
 }
 
 // ── Profile tab: key box ──
