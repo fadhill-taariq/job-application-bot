@@ -25,7 +25,7 @@ function showPage(name, el) {
   document.getElementById('page-' + name).classList.add('active');
   (el || event.currentTarget).classList.add('active');
   if (name === 'tracker') renderTracker();
-  if (name === 'profile') { renderProfileForm(); document.getElementById('importResult').style.display = 'none'; }
+  if (name === 'profile') { renderProfileForm(); renderJSearchKeyForm(); document.getElementById('importResult').style.display = 'none'; }
 }
 
 // ── GENERATE ──────────────────────────────────────────
@@ -551,17 +551,45 @@ async function scrapeJobs() {
   document.getElementById('scrapeStatus').style.display = 'flex';
   document.getElementById('scrapeStatusText').textContent = 'Fetching job listings...';
   document.getElementById('filterBar').style.display = 'none';
-  document.getElementById('apiNotice').style.display = 'block';
+  document.getElementById('apiNotice').style.display = 'none';
+  document.getElementById('liveNotice').style.display = 'none';
   document.getElementById('jobFeed').innerHTML = '';
 
-  // Filter demo jobs by keywords
-  const kws = keywords.toLowerCase().split(' ').filter(k=>k.length>2);
-  let pool = DEMO_JOBS.filter(j => kws.some(k =>
-    j.title.toLowerCase().includes(k) ||
-    j.description.toLowerCase().includes(k) ||
-    j.type.toLowerCase().includes(k)
-  ));
-  if (pool.length === 0) pool = DEMO_JOBS.slice(0,5);
+  let pool;
+  const live = document.getElementById('searchSource').value === 'jsearch';
+  if (live) {
+    const location = document.getElementById('searchLocation').value.trim();
+    const countrySel = document.getElementById('searchCountry');
+    document.getElementById('scrapeStatusText').textContent = 'Searching live jobs...';
+    try {
+      pool = await fetchJSearchJobs({ keywords, location, country: countrySel.value, datePosted: document.getElementById('searchPosted').value });
+    } catch (e) {
+      document.getElementById('scrapeBtn').disabled = false;
+      document.getElementById('scrapeStatus').style.display = 'none';
+      err.textContent = e.message; err.classList.add('visible');
+      return;
+    }
+    if (!pool.length) {
+      document.getElementById('scrapeBtn').disabled = false;
+      document.getElementById('scrapeStatus').style.display = 'none';
+      err.textContent = 'No live jobs found for that search — try broader keywords, a different location, or a longer "Posted" window.';
+      err.classList.add('visible');
+      return;
+    }
+    const ln = document.getElementById('liveNotice');
+    ln.innerHTML = `<strong style="color:var(--success);">Live results</strong> — ${pool.length} jobs in ${fcEscapeHTML(countrySel.options[countrySel.selectedIndex].text)} from Google for Jobs via JSearch, each scored against your profile.`;
+    ln.style.display = 'block';
+  } else {
+    document.getElementById('apiNotice').style.display = 'block';
+    // Filter demo jobs by keywords
+    const kws = keywords.toLowerCase().split(' ').filter(k=>k.length>2);
+    pool = DEMO_JOBS.filter(j => kws.some(k =>
+      j.title.toLowerCase().includes(k) ||
+      j.description.toLowerCase().includes(k) ||
+      j.type.toLowerCase().includes(k)
+    ));
+    if (pool.length === 0) pool = DEMO_JOBS.slice(0,5);
+  }
 
   document.getElementById('scrapeStatusText').textContent = `Scoring ${pool.length} listings with ${modelLabel()}...`;
 
@@ -578,7 +606,8 @@ Job: ${job.title} at ${job.company}
 ${job.description.substring(0,350)}`;
       const d = await callLLM(p, 150, { kind:'scrape', jd: job.description });
       const r = safeParseJSON(extractText(d), { score: 5, reason: 'Could not score' });
-      scored.push({ ...job, score:r.score, reason:r.reason });
+      const sc = Math.round(Number(r.score));
+      scored.push({ ...job, score: Number.isFinite(sc) ? Math.min(10, Math.max(1, sc)) : 5, reason: r.reason });
     } catch { scored.push({ ...job, score:5, reason: DEMO.active ? 'Scoring unavailable' : 'Scoring unavailable — is Ollama running?' }); }
   }
 
@@ -615,8 +644,8 @@ function renderJobs(minScore) {
       ${applied?'<div class="applied-stamp">✓ Applied</div>':''}
       <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:6px;">
         <div style="flex:1;">
-          <div class="job-title">${job.title}</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:2px;">${job.company}</div>
+          <div class="job-title">${esc(job.title)}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px;">${esc(job.company)}</div>
         </div>
         <div style="text-align:right;flex-shrink:0;">
           <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:${col};">${sc}/10</div>
@@ -624,20 +653,23 @@ function renderJobs(minScore) {
         </div>
       </div>
       <div class="job-meta">
-        <span class="job-tag">📍 ${job.location}</span>
-        <span class="job-tag">💰 ${job.salary}</span>
-        <span class="job-tag">${job.type}</span>
-        <span class="job-tag">via ${job.source}</span>
+        <span class="job-tag">📍 ${esc(job.location)}</span>
+        <span class="job-tag">💰 ${esc(job.salary)}</span>
+        <span class="job-tag">${esc(job.type)}</span>
+        <span class="job-tag">via ${esc(job.source)}</span>
       </div>
-      <div class="job-snippet">${job.description}</div>
+      <div class="job-snippet">${esc(job.description)}</div>
       ${job.reason?`<div style="font-size:10px;color:var(--muted);font-style:italic;margin-top:6px;">${fcEscapeHTML(String(job.reason))}</div>`:''}
       <div class="job-actions">
         <button class="btn-ghost" style="padding:7px 14px;" onclick="loadJob(${job.id})">⚡ Generate Application</button>
-        <a href="${job.url}" target="_blank" style="text-decoration:none;"><button class="btn-ghost" style="padding:7px 14px;">↗ View Listing</button></a>
+        <a href="${safeUrl(job.url)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;"><button class="btn-ghost" style="padding:7px 14px;">↗ View Listing</button></a>
       </div>
     </div>`;
   }).join('');
 }
+
+function esc(v) { return fcEscapeHTML(String(v ?? '')); }
+function safeUrl(u) { return /^https?:\/\//i.test(u || '') ? esc(u) : '#'; }
 
 function filterJobs(f, el) {
   state.activeFilter = f;
@@ -940,6 +972,7 @@ function applyProfileBranding() {
 
 // Init
 applyProfileBranding();
+updateSourceSelect();
 document.getElementById('trackerCount').textContent = state.applications.length;
 renderTracker();
 if (demoRequested()) enableDemo();

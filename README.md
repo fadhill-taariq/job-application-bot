@@ -29,7 +29,9 @@ A local job application assistant powered by [Ollama](https://ollama.com) LLMs. 
 ![Profile tab](docs/profile.jpg)
 
 ### Job Scraper Tab
-- Search demo job listings, each scored against your profile
+- **Live jobs** from Google for Jobs (LinkedIn, Indeed, Glassdoor, company sites) via the [JSearch API](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch), searchable by keywords, location, country and posting date
+- Every result scored against your profile by your local model
+- Without a key, falls back to built-in demo listings
 - Filter by role type (Developer, Data, Backend, Graduate, Remote)
 - Minimum fit score threshold slider
 - One-click to load any listing into the Generate tab
@@ -77,7 +79,11 @@ If you get "address already in use", Ollama is already running in the background
 
 Extract the zip (or clone the repo), then open `index.html` in your browser. There's no build step and no server needed.
 
-**5. Set up your profile**
+**5. (Optional) Live job search**
+
+Get a free JSearch key: open [JSearch on RapidAPI](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch), subscribe to the **Basic** plan ($0, 200 searches a month) and copy `X-RapidAPI-Key` from the Endpoints tab. Paste it into **Profile → Live job search key**. The key is stored only in your browser; it isn't part of the profile export and never goes into the code.
+
+**6. Set up your profile**
 
 Open the **Profile** tab and click **Upload CV** to import your CV, or replace the details by hand: contact info, skills summary, CV body and cover letter template. Review the boxes, then click **Save Profile**.
 
@@ -114,6 +120,7 @@ js/profile.js       # Default profile + summary tailoring rules + CV builder
 js/factcheck.js     # Flags output that isn't supported by the profile
 js/demo.js          # Demo mode (no Ollama needed)
 js/cvimport.js      # CV upload: PDF/Word text extraction and conversion
+js/jobsearch.js     # Live job search (JSearch API)
 js/app.js           # Generation, PDF export, scraper, tracker, Profile tab
 docs/               # README screenshots
 ```
@@ -121,5 +128,5 @@ docs/               # README screenshots
 ## Notes
 
 - Demo job listings are included for testing without a live job API
-- For live job listings, free API keys are available from [Adzuna](https://developer.adzuna.com) and [Reed](https://www.reed.co.uk/developers/jobseeker)
+- JSearch coverage varies by country, as it depends on what Google for Jobs indexes there
 - The fact check catches new numbers and technology names, not every reworded claim, so always read the output before sending
