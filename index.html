@@ -132,6 +132,10 @@
       <div class="action-bar">
         <button class="btn-ghost" onclick="copyText('cvOutput',this)">📋 Copy CV</button>
         <button class="btn-pdf" onclick="exportPDF('cv')">⬇ Export CV as PDF</button>
+        <select id="cvLayout" onchange="setCVLayout(this.value)" title="PDF layout" style="width:auto;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:11px;">
+          <option value="classic">Classic layout</option>
+          <option value="twocol">Two-column layout</option>
+        </select>
         <button class="btn-ghost" onclick="logApplication()">✓ Log as Applied</button>
       </div>
     </div>
@@ -354,6 +358,7 @@
 <script src="js/demo.js"></script>
 <script src="js/cvimport.js"></script>
 <script src="js/jobsearch.js"></script>
+<script src="js/cvpdf-classic.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
