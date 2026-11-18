@@ -8,13 +8,14 @@
 
 const DEFAULT_PROFILE = {
   "name": "Taariq Fadhil",
-  "phone": "07771548194",
+  "phone": "+44 7771548194 / +358 400187529",
   "email": "fadhill.taariq@gmail.com",
   "github": "github.com/fadhill-taariq",
   "linkedin": "linkedin.com/in/taariq-fadhil",
-  "scoringSummary": "Python, TypeScript, JavaScript, Django, Node.js, REST APIs, SQL, MySQL, BigQuery, GCP, Git, Linux, Machine Learning basics, Data Visualisation, HTML/CSS. BSc Computer Science (Exeter). Freelance web dev (TypeScript, Sanity.io). Production operator (QA, Lean/5S).",
+  "website": "taariqf.netlify.app",
+  "scoringSummary": "Python, TypeScript, JavaScript, PHP, SQL, HTML/CSS, MATLAB, C++, Django, Node.js, Pandas, Matplotlib, scikit-learn, MySQL, BigQuery, GROQ, Sanity.io, GCP (Compute Engine, BigQuery), Linux, SSH, Git, REST APIs, Agile, Test-Driven Development. BSc Computer Science (Exeter, 2:1). Freelance web dev (TypeScript, Sanity.io). Production operator (GMP, QA, Lean/5S). English (fluent), Finnish (A1–A2).",
   "summary": {
-    "intro": "BSc Computer Science graduate from the University of Exeter (2021–2024), with emphasis on software engineering, algorithm design and data analysis.",
+    "intro": "Computer Science graduate (University of Exeter, 2024) with production experience in TypeScript, Python, and GCP across full-stack web development, data engineering, and local AI tooling.",
     "softSkills": "Strong attention to detail, cooperative, proactive and energetic — comfortable working in both team and independent environments.",
     "maxBullets": 5,
     "stackVariants": [
@@ -105,7 +106,12 @@ const DEFAULT_PROFILE = {
       "machine learning",
       "ai",
       "bigquery",
-      "vertex"
+      "vertex",
+      "linux",
+      "ssh",
+      "devops",
+      "infrastructure",
+      "deployment"
     ],
     "cloudVariants": [
       {
@@ -138,15 +144,18 @@ const DEFAULT_PROFILE = {
           "compute engine",
           "infrastructure",
           "devops",
-          "deploy"
+          "deploy",
+          "linux",
+          "ssh",
+          "deployment"
         ],
-        "text": "Familiar with GCP (Compute Engine, AI/ML operations) from university coursework and personal projects; comfortable working in cloud-based development environments."
+        "text": "Comfortable working across the full deployment stack — from local Linux development environments to GCP Compute Engine and BigQuery — with hands-on experience in SSH, CLI tooling, and cloud-hosted data pipelines."
       },
       {
         "tags": [
           "default"
         ],
-        "text": "Familiar with GCP (Compute Engine, AI/ML operations) from university and personal projects."
+        "text": "Comfortable working across the full deployment stack — from local Linux development environments to GCP Compute Engine and BigQuery — with hands-on experience in SSH, CLI tooling, and cloud-hosted data pipelines."
       }
     ],
     "conditional": [
@@ -239,7 +248,7 @@ const DEFAULT_PROFILE = {
       }
     ]
   },
-  "cvBody": "EDUCATION\nBachelor of Computer Science — University of Exeter (2021–2024)\nCoursework: Data Structures, Machine Learning Fundamentals, Computer Graphics\nEmphasis: software engineering, algorithm design, unit/integration testing, data analysis\nGCP experience via university: Compute Engine and AI/ML operations\n\nWORK EXPERIENCE\nFreelance Web Developer — Mediq (Healthcare) | Current\n- Expanded and maintained a production healthcare website using TypeScript and Sanity.io\n- Implemented GROQ queries to optimise dynamic content delivery\n- Built backend HTTP request handling services in TypeScript\n- Collaborated with copywriters to ensure compliant content formatting\n\nProduction Operator — Ethypharm UK, Romford | Current\n- Operated pharmaceutical detection and QA systems in a regulated environment\n- Contributed to a record-breaking shift (266,000 ampoules packed — 15% above previous record)\n- Trained 4 operators on quality detection systems\n- Implemented Lean and 5S methodologies to streamline operations\n\nPROJECTS\nTetris Website — Python, HTML, CSS, PHP, JavaScript\nBrowser-playable Tetris with score tracking, leaderboard and MySQL-backed authentication\n\nDissertation: Predictive Modelling — Python, Data Analysis & Visualisation\nLinear regression and random forest models; feature selection, preprocessing, model visualisation\n\nCOVID-19 Real-Time News Dashboard\nLive data news feed displaying real-time pandemic statistics\n\nTECHNICAL SKILLS\nLanguages: Python (Intermediate), TypeScript (Beginner), JavaScript (Beginner), HTML/CSS (Intermediate), C++ (Beginner)\nFrameworks: Django, Node.js (HTTP services), CMS architectures, MySQL, Pandas, MatPlotLib\nTools: Git, Linux, Command Line, Sanity.io, GROQ, GCP (Compute Engine, BigQuery)\nConcepts: REST APIs, Backend Dev, Frontend Dev, Machine Learning Fundamentals, Data Visualisation, OOP (Java)",
+  "cvBody": "EDUCATION\nBachelor of Computer Science — University of Exeter (2021–2024)\n- Grade achieved: Upper Second Class with Honours\n- Relevant coursework: Software Engineering; Algorithms; dissertation on predictive models of students' stress levels\n\nWORK EXPERIENCE\nFreelance Web Developer — Mediq (Healthcare), Remote | Oct 2025 – Nov 2025\n- Expanded and maintained a production healthcare website serving thousands of users, using TypeScript and Sanity.io, reducing content update turnaround time by an estimated 40% through streamlined CMS workflows.\n- Implemented GROQ queries to optimise dynamic content delivery, cutting average page data-fetch latency and improving content rendering consistency across 10+ page types.\n- Collaborated with copywriters and compliance teams to ensure 100% regulatory-compliant content formatting across all published healthcare pages.\n\nProduction Operator — Ethypharm UK, Romford, UK | Current\n- Operated pharmaceutical detection and QA systems in a highly regulated GMP environment, maintaining 100% compliance across all monitored shifts.\n- Contributed to a record-breaking shift (266,000 ampoules packed — 15% above previous record).\n- Trained 4 operators on quality detection OCV systems, reducing onboarding time and maintaining zero defect escapes during the training period.\n\nPROJECTS\nDissertation: Predictive Modelling — Python, scikit-learn, Matplotlib\n- Developed supervised machine learning models (linear regression and random forest) in Python using scikit-learn, applying feature engineering, cross-validation, and data preprocessing pipelines to predict student stress levels.\n- Achieved 97% model accuracy; visualised results using Matplotlib and presented findings in a research report achieving a grade of 71%, making it eligible for publication.\n\nCOVID-19 Real-Time News Dashboard — Python, REST APIs\n- Built a real-time web dashboard aggregating live COVID-19 statistics and news via third-party REST APIs, implementing auto-refreshing data feeds and responsive UI components using Python.\n- Integrated data visualisation charts to display trends (cases, deaths, recoveries) across a specific region, enabling at-a-glance public health monitoring.\n\nTetris Web Game — JavaScript, HTML5 Canvas, PHP, MySQL\n- Built a browser-based Tetris in vanilla JavaScript on the HTML5 Canvas, implementing the game loop, collision detection, wall-kick rotation, a ghost piece and a level-scaling drop speed.\n- Added a PHP and MySQL backend with user registration, session-based login and a score leaderboard.\n\nAI-Powered Job Application Tool — JavaScript, Ollama, jsPDF\n- Built a local-first, API-key-free tool that tailors CVs and cover letters to job descriptions using Ollama LLMs, combining keyword-rule summary tailoring with LLM fit scoring and rewriting.\n- Added a fact check that flags numbers and technologies in generated text that aren't in the source profile, an editable profile with CV import, two-column PDF export via jsPDF and a browser demo mode.\n\nTECHNICAL SKILLS\nLanguages: Python, TypeScript, JavaScript, PHP, SQL, HTML/CSS, MATLAB, C++\nFrameworks & Libraries: Django, Node.js, Pandas, Matplotlib, scikit-learn\nDatabases & Query: MySQL, BigQuery, GROQ, Sanity.io (GROQ-powered CMS)\nCloud & Infrastructure: GCP (Compute Engine, BigQuery), Linux, SSH, Git\nTools & Platforms: Sanity.io, Command Line, CMS Architectures\nMethodologies: Lean, 5S, Agile, Test-Driven Development, REST APIs\nSpoken Languages: English (C2 / Fluent), Finnish (A1–A2 / Conversational)",
   "coverTemplate": "Dear Hiring Manager,\n\nI am applying for the ____ position at ____. I am a Computer Science graduate with hands-on experience building full-stack and backend-driven applications, with a particular focus on API development, database systems and scalable content platforms.\n\nIn my recent freelance work within the healthcare sector, I expanded and maintained a production website using TypeScript and a headless CMS architecture powered by Sanity.io. I implemented GROQ queries for dynamic delivery, and built HTTP services to support frontend data consumption. This work built upon my understanding of API design and collaboration with copywriters in a regulated environment.\n\nFurthermore, I have developed several backend-focused academic and personal projects. I built a browser-playable game of Tetris featuring a MySQL leaderboard system with authentication through a login system and score ranking logic, combining database design with interactive frontend gameplay. For my dissertation, I created predictive models using Python and scikit-learn, implementing linear regression and random forest models to predict how students perceive their stress levels during university. This included feature preprocessing and evaluating model performance across structured datasets that I curated myself.\n\nMy broader experience includes object-oriented programming in Java through pair-programming software projects, as well as real-time dashboard developments utilising API integration. These experiences have strengthened my foundations in algorithm design, data handling, and system architecture. I am particularly interested in continuing to grow in backend and cloud-based environments.\n\nBeyond technical experience, I bring strong collaboration and communication skills due to my freelance work and prior tutoring experience. I am confident in understanding the goals of stakeholders and clients and translating these into technical implementations within team environments to ensure reliable software solutions are made.\n\nI am especially drawn to ____ due to ____, and I am excited by the opportunity to contribute to ___ and to continue to develop as an engineer. I am fully willing to relocate to Finland and can do so on short notice.\n\nThank you for your time and consideration, I look forward to the opportunity to discuss how my experience aligns with the goals of your team.\n\nSincerely,\nTaariq Fadhil"
 };
 
@@ -267,7 +276,7 @@ function resetProfile() {
 let profile = loadProfile();
 
 function contactLine(p = profile) {
-  return [p.phone, p.email, p.github, p.linkedin].filter(Boolean).join(' | ');
+  return [p.phone, p.email, p.github, p.linkedin, p.website].filter(Boolean).join(' | ');
 }
 
 // ── SUMMARY BULLETS ─────────────────────────────────────

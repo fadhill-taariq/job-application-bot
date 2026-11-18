@@ -20,12 +20,14 @@ const TECH_TERMS = [
 ];
 
 // Capitalised words that aren't claims (avoid noisy flags)
-const FC_STOPWORDS = new Set(['i','cv','uk','us','usa','eu','hr','ok','pdf','ceo','cto','ltd','plc','llc','am','pm','re','dear','faq']);
+const FC_STOPWORDS = new Set(['i','cv','uk','us','usa','eu','hr','ok','pdf','ceo','cto','ltd','plc','llc','am','pm','re','dear','faq',
+  // section headings
+  'summary','profile','education','work','experience','projects','project','technical','skills','additional','key','languages']);
 
 function factSourceText(p = profile) {
   const s = p.summary || {};
   const pools = [...(s.stackVariants || []), ...(s.cloudVariants || []), ...(s.conditional || [])].map(v => v.text);
-  return [p.name, p.phone, p.email, p.github, p.linkedin, p.scoringSummary, s.intro, s.softSkills, ...pools, p.cvBody, p.coverTemplate]
+  return [p.name, p.phone, p.email, p.github, p.linkedin, p.website, p.scoringSummary, s.intro, s.softSkills, ...pools, p.cvBody, p.coverTemplate]
     .filter(Boolean).join('\n');
 }
 
@@ -40,8 +42,8 @@ function fcLooksTech(w) {
 
 // Returns [{ text, kind }] for things in `output` not supported by the profile.
 // `ignore` = extra words that are fine (company name, role title).
-function findUnsupported(output, ignore = []) {
-  const src = factSourceText();
+function findUnsupported(output, ignore = [], sourceText = null) {
+  const src = sourceText ?? factSourceText();
   const srcLower = src.toLowerCase();
   const outLower = output.toLowerCase();
   const ignoreLower = ignore.filter(Boolean).join(' ').toLowerCase();
@@ -59,7 +61,7 @@ function findUnsupported(output, ignore = []) {
   // 2. Known technologies not in the profile
   for (const t of TECH_TERMS) {
     if (t.length < 2) continue; // 'c' / 'r' are too ambiguous to flag
-    if (hasTag(outLower, t) && !hasTag(srcLower, t) && !hasTag(ignoreLower, t)) {
+    if (hasTag(outLower, t) && !hasTag(srcLower, t) && !hasTag(srcLower, t + 's') && !hasTag(ignoreLower, t)) {
       // show it the way it's written in the output (AWS, not aws)
       const at = outLower.search(new RegExp('(^|[^a-z0-9])' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![a-z0-9])'));
       const start = at + (outLower[at] === t[0] ? 0 : 1);

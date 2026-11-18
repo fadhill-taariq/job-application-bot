@@ -25,7 +25,7 @@ function showPage(name, el) {
   document.getElementById('page-' + name).classList.add('active');
   (el || event.currentTarget).classList.add('active');
   if (name === 'tracker') renderTracker();
-  if (name === 'profile') renderProfileForm();
+  if (name === 'profile') { renderProfileForm(); document.getElementById('importResult').style.display = 'none'; }
 }
 
 // ── GENERATE ──────────────────────────────────────────
@@ -280,7 +280,7 @@ function exportPDF(type) {
     return y;
   }
 
-  const contacts = [profile.phone, profile.email, profile.github, profile.linkedin].filter(Boolean);
+  const contacts = [profile.phone, profile.email, profile.github, profile.linkedin, profile.website].filter(Boolean);
   contacts.forEach(c => {
     iconBox(ly);
     doc.setFont('helvetica','normal'); doc.setFontSize(6.8); doc.setTextColor(50,50,50);
@@ -377,8 +377,9 @@ function parseCVText(text) {
     'SUMMARY':'summary', 'PROFILE':'summary', 'PROFESSIONAL SUMMARY':'summary',
     'EDUCATION':'education',
     'WORK EXPERIENCE':'experience', 'EXPERIENCE':'experience', 'PROFESSIONAL EXPERIENCE':'experience', 'EMPLOYMENT':'experience',
-    'PROJECTS':'projects', 'PROJECT EXAMPLES':'projects', 'KEY PROJECTS':'projects',
-    'TECHNICAL SKILLS':'skills', 'SKILLS':'skills', 'KEY SKILLS':'skills'
+    'PROJECTS':'projects', 'PROJECT EXAMPLES':'projects', 'KEY PROJECTS':'projects', 'PERSONAL PROJECTS':'projects',
+    'UNIVERSITY AND PERSONAL PROJECTS':'projects', 'ACADEMIC PROJECTS':'projects', 'ACADEMIC AND PERSONAL PROJECTS':'projects',
+    'TECHNICAL SKILLS':'skills', 'SKILLS':'skills', 'KEY SKILLS':'skills', 'ADDITIONAL':'skills', 'ADDITIONAL INFORMATION':'skills', 'SKILLS AND INTERESTS':'skills'
   };
   const YEARS_RE = /\(?\s*((?:19|20)\d{2}\s*[–—-]\s*(?:(?:19|20)\d{2}|present|current)|(?:19|20)\d{2})\s*\)?/i;
   const SEP_RE = /\s+[—–]\s+|\s+-\s+/; // "Title — Company"
@@ -483,7 +484,8 @@ function exportCoverLetterPDF(company, role, filename) {
 
   // Contact strip
   doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(120,120,120);
-  doc.text([profile.phone, profile.email, profile.github, profile.linkedin].filter(Boolean).join('  ·  '), PW/2, y, { align:'center' });
+  doc.splitTextToSize([profile.phone, profile.email, profile.github, profile.linkedin, profile.website].filter(Boolean).join('  ·  '), PW - 2*M).forEach((l, i) => doc.text(l, PW/2, y + i*3.6, { align:'center' }));
+  y += 3.6 * (doc.splitTextToSize([profile.phone, profile.email, profile.github, profile.linkedin, profile.website].filter(Boolean).join('  ·  '), PW - 2*M).length - 1);
   y += 2.5;
   doc.setDrawColor(210,210,210); doc.setLineWidth(0.25);
   doc.line(M, y, PW-M, y);
@@ -851,7 +853,7 @@ function renderProfileForm() {
   const p = profile, s = p.summary || {};
   const set = (id, v) => { document.getElementById(id).value = v || ''; };
   set('pf-name', p.name); set('pf-phone', p.phone); set('pf-email', p.email);
-  set('pf-github', p.github); set('pf-linkedin', p.linkedin);
+  set('pf-github', p.github); set('pf-linkedin', p.linkedin); set('pf-website', p.website);
   set('pf-scoring', p.scoringSummary);
   set('pf-intro', s.intro); set('pf-soft', s.softSkills);
   const rules = {}; PF_RULE_KEYS.forEach(k => rules[k] = s[k]);
@@ -872,7 +874,7 @@ function readProfileForm() {
   }
   const p = {
     name: get('pf-name'), phone: get('pf-phone'), email: get('pf-email'),
-    github: get('pf-github'), linkedin: get('pf-linkedin'),
+    github: get('pf-github'), linkedin: get('pf-linkedin'), website: get('pf-website'),
     scoringSummary: get('pf-scoring'),
     summary: { intro: get('pf-intro'), softSkills: get('pf-soft') },
     cvBody: get('pf-cv'), coverTemplate: get('pf-cover')

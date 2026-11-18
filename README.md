@@ -21,6 +21,7 @@ A local job application assistant powered by [Ollama](https://ollama.com) LLMs. 
 
 ### Profile Tab
 - **One source of truth**: name, contact details, the skills used for scoring, summary bullet rules, CV body and cover letter template all live in one profile
+- **Import a CV**: upload a PDF, Word (.docx) or text CV; it's read in the browser, rearranged into the profile format (by the local model, or simple rules without Ollama), checked against the original for anything added or dropped, and loaded into the form for review
 - Edit everything in the browser (saved in `localStorage`), or change the defaults in [`js/profile.js`](js/profile.js)
 - Export / import the profile as JSON for backups or another machine
 - Tailoring rules (stack variants, cloud bullet, conditional bullets) are editable as JSON, with whole-word tag matching
@@ -78,7 +79,7 @@ Extract the zip (or clone the repo), then open `index.html` in your browser. The
 
 **5. Set up your profile**
 
-Open the **Profile** tab and replace the details with your own: contact info, skills summary, CV body and cover letter template. Click **Save Profile**.
+Open the **Profile** tab and click **Upload CV** to import your CV, or replace the details by hand: contact info, skills summary, CV body and cover letter template. Review the boxes, then click **Save Profile**.
 
 ## Demo Mode
 
@@ -101,6 +102,7 @@ Each call is small and focused, so local models handle them reliably. The result
 - Vanilla HTML / CSS / JavaScript: zero dependencies, zero build tooling
 - [Ollama](https://ollama.com): local LLM inference (llama3, mistral, phi3, etc.)
 - [jsPDF](https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js): client-side PDF generation
+- [pdf.js](https://mozilla.github.io/pdf.js/) and [mammoth.js](https://github.com/mwilliamson/mammoth.js): reading uploaded PDF and Word CVs (loaded only when you import one)
 - `localStorage`: profile and application tracker persistence
 
 ## File Structure
@@ -111,6 +113,7 @@ css/styles.css      # Styles
 js/profile.js       # Default profile + summary tailoring rules + CV builder
 js/factcheck.js     # Flags output that isn't supported by the profile
 js/demo.js          # Demo mode (no Ollama needed)
+js/cvimport.js      # CV upload: PDF/Word text extraction and conversion
 js/app.js           # Generation, PDF export, scraper, tracker, Profile tab
 docs/               # README screenshots
 ```
