@@ -155,7 +155,7 @@
 <!-- ═══ PAGE: SCRAPER ═══ -->
 <div class="page" id="page-scraper">
   <h1>Find<br><span>your roles.</span></h1>
-  <p class="subtitle">// search live jobs scored against your profile · click any result to generate an application</p>
+  <p class="subtitle">// live jobs from Google for Jobs, scored against your profile · click any result to generate an application</p>
 
   <div class="card mb16">
     <div class="card-label">Search Parameters</div>
@@ -166,16 +166,40 @@
       </div>
       <div>
         <div style="font-size:10px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em;">Location</div>
-        <input type="text" id="searchLocation" value="London" placeholder="e.g. London, Remote">
+        <input type="text" id="searchLocation" value="London" placeholder="e.g. London, Helsinki — or leave blank">
       </div>
       <div>
         <div style="font-size:10px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em;">Source</div>
-        <select id="searchSource">
-          <option value="adzuna">Adzuna API</option>
-          <option value="remotive">Remotive (Remote, free)</option>
-          <option value="reed">Reed API</option>
+        <select id="searchSource" onchange="updateSearchNotice()">
+          <option value="jsearch">Live jobs (JSearch)</option>
+          <option value="demo">Demo listings</option>
         </select>
       </div>
+    </div>
+    <div class="grid-3" style="margin:16px 0 0;">
+      <div id="searchCountryWrap">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em;">Country</div>
+        <select id="searchCountry">
+          <option value="gb">United Kingdom</option>
+          <option value="fi">Finland</option>
+          <option value="ie">Ireland</option>
+          <option value="se">Sweden</option>
+          <option value="nl">Netherlands</option>
+          <option value="de">Germany</option>
+          <option value="us">United States</option>
+        </select>
+      </div>
+      <div id="searchPostedWrap">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em;">Posted</div>
+        <select id="searchPosted">
+          <option value="all">Any time</option>
+          <option value="month">Past month</option>
+          <option value="week" selected>Past week</option>
+          <option value="3days">Past 3 days</option>
+          <option value="today">Today</option>
+        </select>
+      </div>
+      <div style="font-size:10px;color:var(--muted);line-height:1.6;align-self:end;">Live search uses 1 of your 200 free JSearch requests a month and returns about 10 jobs.</div>
     </div>
   </div>
 
@@ -198,13 +222,11 @@
   <div class="error-msg" id="scrapeError"></div>
 
   <div class="notice-card" id="apiNotice">
-    <div class="notice-title">⚠ Live API Keys for Production Use</div>
-    To pull real listings you'll need free keys:<br>
-    • <strong>Adzuna</strong>: <a href="https://developer.adzuna.com" target="_blank">developer.adzuna.com</a> — 250 req/day free<br>
-    • <strong>Reed</strong>: <a href="https://www.reed.co.uk/developers/jobseeker" target="_blank">reed.co.uk/developers</a> — free<br>
-    • <strong>Remotive</strong>: No key needed — public API for remote jobs<br><br>
-    Showing <strong>demo results</strong> for now (Location and Source aren't wired up yet) — each one scored against your profile.
+    <div class="notice-title">Demo listings</div>
+    These are sample jobs, each scored against your profile. For real listings from LinkedIn, Indeed, Glassdoor and company sites, get a free
+    <a href="https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch" target="_blank">JSearch key on RapidAPI</a> (Basic plan, 200 searches a month), add it in the <strong>Profile</strong> tab, and choose <strong>Live jobs</strong> as the source.
   </div>
+  <div class="notice-card" id="liveNotice" style="border-color:rgba(66,245,168,0.3);background:rgba(66,245,168,0.04);"></div>
 
   <div class="filter-bar" id="filterBar" style="display:none;">
     <span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;">Filter:</span>
@@ -298,6 +320,17 @@
     <textarea id="pf-cover" rows="18" style="font-size:11px;"></textarea>
   </div>
 
+  <div class="card mb16">
+    <div class="card-label">Live job search key <span class="pf-help">— JSearch on RapidAPI · kept in this browser only, never exported or uploaded</span></div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <input type="password" id="pf-jsearch" autocomplete="off" spellcheck="false" style="flex:1;min-width:260px;border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
+      <button class="btn-secondary" onclick="saveJSearchKeyForm()">Save key</button>
+      <button class="btn-danger" onclick="removeJSearchKeyForm()">Remove</button>
+    </div>
+    <div style="font-size:10px;margin-top:8px;" id="pf-jsearch-status"></div>
+    <div style="font-size:10px;color:var(--muted);margin-top:6px;">Free key: <a href="https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch" target="_blank" style="color:var(--accent);">rapidapi.com → JSearch</a> → subscribe to Basic ($0) → copy <code>X-RapidAPI-Key</code> from the Endpoints tab.</div>
+  </div>
+
   <div class="error-msg" id="profileError"></div>
   <div class="btn-row">
     <button class="btn-primary" onclick="saveProfileForm()">💾 Save Profile</button>
@@ -320,6 +353,7 @@
 <script src="js/factcheck.js"></script>
 <script src="js/demo.js"></script>
 <script src="js/cvimport.js"></script>
+<script src="js/jobsearch.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
